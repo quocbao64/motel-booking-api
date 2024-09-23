@@ -1,0 +1,96 @@
+basePath: /api/v1
+definitions:
+  dao.AddressResponse:
+    properties:
+      detail:
+        type: string
+      district_name:
+        type: string
+      id:
+        type: integer
+      province_name:
+        type: string
+      ward_name:
+        type: string
+    type: object
+  dao.UsersResponse:
+    properties:
+      address:
+        $ref: '#/definitions/dao.AddressResponse'
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      identity_number:
+        type: string
+      img_url:
+        type: string
+      phone:
+        type: string
+      refresh_token:
+        type: string
+      role:
+        items:
+          type: integer
+        type: array
+    type: object
+  service.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user_info:
+        $ref: '#/definitions/dao.UsersResponse'
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:3005
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Login
+      parameters:
+      - description: email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: password
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.LoginResponse'
+      summary: Login
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
