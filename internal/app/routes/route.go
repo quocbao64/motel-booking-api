@@ -28,6 +28,10 @@ func Route(init *config.Initialize) *gin.Engine {
 		GeographyRoute(init, api.Group("/geography"))
 		AddressRoute(init, api.Group("/address"))
 		ServiceRoute(init, api.Group("/services"))
+		ContractRoute(init, api.Group("/contracts"))
+		InvoiceRoute(init, api.Group("/invoices"))
+		ServiceDemandRoute(init, api.Group("/services-demand"))
+		BookingRequestRoute(init, api.Group("/booking-requests"))
 	}
 
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

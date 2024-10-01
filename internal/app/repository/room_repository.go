@@ -107,7 +107,7 @@ func roomToRoomResponse(room *dao.Room) *dao.RoomResponse {
 		MaxPeople:     room.MaxPeople,
 		RoomType:      room.RoomType,
 		Deposit:       room.Deposit,
-		Utilities:     room.Utilities,
+		Services:      room.Services,
 		Images:        room.Images,
 	}
 }

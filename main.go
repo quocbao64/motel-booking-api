@@ -35,6 +35,7 @@ func main() {
 	if !ok {
 		port = "8080"
 	}
+	_ = config.ConnectDB()
 	db := config.ConnectDB()
 	migrationDB(db)
 

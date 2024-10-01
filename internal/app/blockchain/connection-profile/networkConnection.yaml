@@ -1,0 +1,32 @@
+name: test-network
+version: "1.0.0"
+client:
+  tlsEnable: true
+  enableAuthentication: false
+  organization: Org1MSP
+  connection:
+    timeout:
+      peer:
+        endorser: "300"
+      orderer: "300"
+
+channels:
+  mychannel:
+    peers:
+      peer0.org1.example.com: {}
+
+organizations:
+  Org1MSP:
+    mspid: Org1MSP
+    adminPrivateKey:
+      path: ./organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/079e94c8f39844d8f67e7bb3c97e432737951184794220eddf006c2b896bfd09_sk
+    peers:
+      - peer0.org1.example.com
+    signedCert:
+      path: ./organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/cert.pem
+
+peers:
+  peer0.org1.example.com:
+    tlsCACerts:
+      path: ./organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+    url: grpcs://peer0.org1.example.com:7051

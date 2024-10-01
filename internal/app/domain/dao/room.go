@@ -4,18 +4,19 @@ import "gorm.io/datatypes"
 
 type Room struct {
 	BaseModel
-	Title         string         `gorm:"title" json:"title"`
-	AddressID     uint           `gorm:"address_id" json:"address_id"`
-	Acreage       int            `gorm:"acreage" json:"acreage"`
-	Price         float64        `gorm:"price" json:"price"`
-	Description   string         `gorm:"description" json:"description"`
-	DateSubmitted string         `gorm:"date_submitted" json:"date_submitted"`
-	OwnerID       uint           `gorm:"owner_id" json:"owner_id"`
-	MaxPeople     int            `gorm:"max_people" json:"max_people"`
-	RoomType      int            `gorm:"room_type" json:"room_type"`
-	Deposit       float64        `gorm:"deposit" json:"deposit"`
-	Utilities     string         `gorm:"utilities" json:"utilities"`
-	Images        datatypes.JSON `gorm:"images" json:"images"`
+	Title           string           `gorm:"title" json:"title"`
+	AddressID       uint             `gorm:"address_id" json:"address_id"`
+	Acreage         int              `gorm:"acreage" json:"acreage"`
+	Price           float64          `gorm:"price" json:"price"`
+	Description     string           `gorm:"description" json:"description"`
+	DateSubmitted   string           `gorm:"date_submitted" json:"date_submitted"`
+	OwnerID         uint             `gorm:"owner_id" json:"owner_id"`
+	MaxPeople       int              `gorm:"max_people" json:"max_people"`
+	RoomType        int              `gorm:"room_type" json:"room_type"`
+	Deposit         float64          `gorm:"deposit" json:"deposit"`
+	Services        []Service        `gorm:"many2many:room_services" json:"services"`
+	Images          datatypes.JSON   `gorm:"images" json:"images"`
+	BookingRequests []BookingRequest `gorm:"foreignKey:RoomID" json:"booking_requests"`
 }
 
 type RoomResponse struct {
@@ -31,6 +32,6 @@ type RoomResponse struct {
 	MaxPeople     int             `json:"max_people"`
 	RoomType      int             `json:"room_type"`
 	Deposit       float64         `json:"deposit"`
-	Utilities     string          `json:"utilities"`
+	Services      []Service       `json:"services"`
 	Images        datatypes.JSON  `json:"images"`
 }

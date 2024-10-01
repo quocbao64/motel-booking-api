@@ -63,6 +63,48 @@ var serviceCtrlSet = wire.NewSet(controller.ServicesControllerInit,
 var serviceRepoSet = wire.NewSet(repository.ServiceRepositoryInit,
 	wire.Bind(new(repository.ServiceRepository), new(*repository.ServiceRepositoryImpl)))
 
+var contractSvcSet = wire.NewSet(service.ContractServiceInit,
+	wire.Bind(new(service.ContractService), new(*service.ContractServiceImpl)))
+
+var contractCtrlSet = wire.NewSet(controller.ContractControllerInit,
+	wire.Bind(new(controller.ContractController), new(*controller.ContractControllerImpl)))
+
+var contractRepoSet = wire.NewSet(repository.ContractRepositoryInit,
+	wire.Bind(new(repository.ContractRepository), new(*repository.ContractRepositoryImpl)))
+
+var invoiceSvcSet = wire.NewSet(service.InvoiceServiceInit,
+	wire.Bind(new(service.InvoiceService), new(*service.InvoiceServiceImpl)))
+
+var invoiceCtrlSet = wire.NewSet(controller.InvoiceControllerInit,
+	wire.Bind(new(controller.InvoiceController), new(*controller.InvoiceControllerImpl)))
+
+var invoiceRepoSet = wire.NewSet(repository.InvoiceRepositoryInit,
+	wire.Bind(new(repository.InvoiceRepository), new(*repository.InvoiceRepositoryImpl)))
+
+var hashContractRepoSet = wire.NewSet(repository.HashContractRepositoryInit,
+	wire.Bind(new(repository.HashContractRepository), new(*repository.HashContractRepositoryImpl)))
+
+var hashContractSvcSet = wire.NewSet(service.HashContractServiceInit,
+	wire.Bind(new(service.HashContractService), new(*service.HashContractServiceImpl)))
+
+var servicesDemandSvcSet = wire.NewSet(service.ServicesDemandServiceInit,
+	wire.Bind(new(service.ServicesDemandService), new(*service.ServicesDemandServiceImpl)))
+
+var servicesDemandCtrlSet = wire.NewSet(controller.ServicesDemandControllerInit,
+	wire.Bind(new(controller.ServicesDemandController), new(*controller.ServicesDemandControllerImpl)))
+
+var servicesDemandRepoSet = wire.NewSet(repository.ServicesDemandRepositoryInit,
+	wire.Bind(new(repository.ServicesDemandRepository), new(*repository.ServicesDemandRepositoryImpl)))
+
+var bookingRequestSvcSet = wire.NewSet(service.BookingRequestServiceInit,
+	wire.Bind(new(service.BookingRequestService), new(*service.BookingRequestServiceImpl)))
+
+var bookingRequestCtrlSet = wire.NewSet(controller.BookingRequestControllerInit,
+	wire.Bind(new(controller.BookingRequestController), new(*controller.BookingRequestControllerImpl)))
+
+var bookingRequestRepoSet = wire.NewSet(repository.BookingRequestRepositoryInit,
+	wire.Bind(new(repository.BookingRequestRepository), new(*repository.BookingRequestRepositoryImpl)))
+
 func Init() *Initialize {
 	wire.Build(
 		db,
@@ -83,6 +125,20 @@ func Init() *Initialize {
 		serviceCtrlSet,
 		serviceSvcSet,
 		serviceRepoSet,
+		hashContractSvcSet,
+		hashContractRepoSet,
+		contractCtrlSet,
+		contractSvcSet,
+		contractRepoSet,
+		invoiceCtrlSet,
+		invoiceSvcSet,
+		invoiceRepoSet,
+		servicesDemandCtrlSet,
+		servicesDemandSvcSet,
+		servicesDemandRepoSet,
+		bookingRequestCtrlSet,
+		bookingRequestSvcSet,
+		bookingRequestRepoSet,
 		NewInitialize)
 	return nil
 }

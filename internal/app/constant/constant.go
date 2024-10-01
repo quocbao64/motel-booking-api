@@ -27,6 +27,12 @@ const (
 )
 
 const (
+	BOOKING_REQUEST_PROCESSING = "PROCESSING"
+	BOOKING_REQUEST_ACCEPTED   = "ACCEPTED"
+	BOOKING_REQUEST_REJECTED   = "REJECTED"
+)
+
+const (
 	Success ResponseStatus = iota + 1
 	DataNotFound
 	InvalidRequest

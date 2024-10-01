@@ -6,15 +6,17 @@ import (
 
 type Users struct {
 	BaseModel
-	FullName       string         `gorm:"full_name" json:"full_name"`
-	Email          string         `gorm:"email" json:"email"`
-	ImgURL         string         `gorm:"img_url" json:"img_url"`
-	Password       string         `gorm:"password" json:"-"`
-	Phone          string         `gorm:"phone;not null" json:"phone"`
-	Role           datatypes.JSON `gorm:"role" json:"role"`
-	RefreshToken   string         `gorm:"refresh_token" json:"-"`
-	IdentityNumber string         `gorm:"identity_number" json:"identity_number"`
-	Address        Address        `gorm:"foreignKey:UserID" json:"address"`
+	FullName        string         `gorm:"full_name" json:"full_name"`
+	Email           string         `gorm:"email" json:"email"`
+	ImgURL          string         `gorm:"img_url" json:"img_url"`
+	Password        string         `gorm:"password" json:"-"`
+	Phone           string         `gorm:"phone;not null" json:"phone"`
+	Role            datatypes.JSON `gorm:"role" json:"role"`
+	RefreshToken    string         `gorm:"refresh_token" json:"-"`
+	IdentityNumber  string         `gorm:"identity_number" json:"identity_number"`
+	Address         Address        `gorm:"foreignKey:UserID" json:"address"`
+	RenterContracts []Contract     `gorm:"foreignKey:RenterID" json:"renter_contracts"`
+	LessorContracts []Contract     `gorm:"foreignKey:LessorID" json:"lessor_contracts"`
 }
 
 type UsersResponse struct {
