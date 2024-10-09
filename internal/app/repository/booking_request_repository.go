@@ -3,6 +3,7 @@ package repository
 import (
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BookingRequestFilter struct {
@@ -27,7 +28,7 @@ type BookingRequestRepositoryImpl struct {
 
 func (repo BookingRequestRepositoryImpl) GetAll(filter *BookingRequestFilter) ([]*dao.BookingRequest, error) {
 	var bookingRequests []*dao.BookingRequest
-	db := repo.db.Table("booking_requests").Order("request_date")
+	db := repo.db.Preload(clause.Associations).Table("booking_requests").Order("request_date")
 
 	if filter.RenterID != 0 {
 		db = db.Where("renter_id = ?", filter.RenterID)

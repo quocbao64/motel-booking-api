@@ -7,7 +7,7 @@ type BookingRequest struct {
 	RenterID          uint      `gorm:"renter_id" json:"renter_id"`
 	LessorID          uint      `gorm:"lessor_id" json:"lessor_id"`
 	RoomID            uint      `gorm:"room_id" json:"room_id"`
-	Room              Room      `gorm:"-" json:"room"`
+	Room              Room      `gorm:"room" json:"room"`
 	RequestDate       time.Time `gorm:"request_date" json:"request_date"`
 	Status            string    `gorm:"status" json:"status"`
 	Note              string    `gorm:"note" json:"note"`

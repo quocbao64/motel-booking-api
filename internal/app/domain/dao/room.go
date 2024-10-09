@@ -1,7 +1,5 @@
 package dao
 
-import "gorm.io/datatypes"
-
 type Room struct {
 	BaseModel
 	Title           string           `gorm:"title" json:"title"`
@@ -15,8 +13,28 @@ type Room struct {
 	RoomType        int              `gorm:"room_type" json:"room_type"`
 	Deposit         float64          `gorm:"deposit" json:"deposit"`
 	Services        []Service        `gorm:"many2many:room_services" json:"services"`
-	Images          datatypes.JSON   `gorm:"images" json:"images"`
+	Images          []string         `gorm:"images;serializer:json" json:"images"`
 	BookingRequests []BookingRequest `gorm:"foreignKey:RoomID" json:"booking_requests"`
+}
+
+type Image struct {
+	FileName   string `json:"file_name"`
+	FileBase64 string `json:"file_base64"`
+}
+
+type RoomRequest struct {
+	Title         string  `json:"title"`
+	AddressID     uint    `json:"address_id"`
+	Acreage       int     `json:"acreage"`
+	Price         float64 `json:"price"`
+	Description   string  `json:"description"`
+	DateSubmitted string  `json:"date_submitted"`
+	OwnerID       uint    `json:"owner_id"`
+	MaxPeople     int     `json:"max_people"`
+	RoomType      int     `json:"room_type"`
+	Deposit       float64 `json:"deposit"`
+	Services      []int   `json:"services"`
+	Images        []Image `json:"images"`
 }
 
 type RoomResponse struct {
@@ -33,5 +51,10 @@ type RoomResponse struct {
 	RoomType      int             `json:"room_type"`
 	Deposit       float64         `json:"deposit"`
 	Services      []Service       `json:"services"`
-	Images        datatypes.JSON  `json:"images"`
+	Images        []string        `json:"images"`
+}
+
+type RoomService struct {
+	RoomID    uint `json:"room_id"`
+	ServiceID uint `json:"service_id"`
 }

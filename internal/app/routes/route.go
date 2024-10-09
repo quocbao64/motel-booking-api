@@ -12,6 +12,15 @@ import (
 
 func Route(init *config.Initialize) *gin.Engine {
 	router := gin.New()
+	cfg := cors.DefaultConfig()
+	cfg.AllowAllOrigins = true
+	cfg.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS"}
+	cfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
+	cfg.ExposeHeaders = []string{"Content-Length"}
+	cfg.AllowCredentials = true
+	cfg.MaxAge = 12 * time.Hour
+
+	router.Use(cors.New(cfg))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Use(cors.New(cors.Config{

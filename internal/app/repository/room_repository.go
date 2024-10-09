@@ -3,6 +3,7 @@ package repository
 import (
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RoomFilter struct {
@@ -17,6 +18,7 @@ type RoomRepository interface {
 	Create(user *dao.Room) (*dao.Room, error)
 	Update(user *dao.Room) (*dao.Room, error)
 	Delete(id int) error
+	CreateRoomService(roomID uint, serviceID uint) error
 }
 
 type RoomRepositoryImpl struct {
@@ -36,7 +38,7 @@ func (repo RoomRepositoryImpl) GetAll(filter *RoomFilter) ([]*dao.RoomResponse, 
 		db = db.Offset((filter.PageID - 1) * filter.PerPage).Limit(filter.PerPage)
 	}
 
-	err := db.Find(&rooms).Error
+	err := db.Preload(clause.Associations).Find(&rooms).Error
 
 	if err != nil {
 		return nil, err
@@ -82,6 +84,21 @@ func (repo RoomRepositoryImpl) Update(room *dao.Room) (*dao.Room, error) {
 
 func (repo RoomRepositoryImpl) Delete(id int) error {
 	err := repo.db.Delete(&dao.Room{}, id).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo RoomRepositoryImpl) CreateRoomService(roomID uint, serviceID uint) error {
+	roomService := &dao.RoomService{
+		RoomID:    roomID,
+		ServiceID: serviceID,
+	}
+
+	err := repo.db.Create(&roomService).Error
 
 	if err != nil {
 		return err
