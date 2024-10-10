@@ -7,6 +7,7 @@ import (
 
 type AddressRepository interface {
 	GetFullAddress(id uint) (*dao.AddressResponse, error)
+	Create(address *dao.Address) (*dao.Address, error)
 }
 
 type AddressRepositoryImpl struct {
@@ -32,4 +33,12 @@ func (repo AddressRepositoryImpl) GetFullAddress(id uint) (*dao.AddressResponse,
 	}
 
 	return &address, nil
+}
+
+func (repo AddressRepositoryImpl) Create(address *dao.Address) (*dao.Address, error) {
+	err := repo.db.Create(&address).Error
+	if err != nil {
+		return &dao.Address{}, err
+	}
+	return address, nil
 }

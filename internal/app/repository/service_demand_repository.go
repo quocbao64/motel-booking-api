@@ -3,6 +3,7 @@ package repository
 import (
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ServiceDemandFilter struct {
@@ -22,7 +23,7 @@ type ServicesDemandRepositoryImpl struct {
 
 func (repo ServicesDemandRepositoryImpl) GetAll() ([]*dao.ServiceDemand, error) {
 	var services []*dao.ServiceDemand
-	err := repo.db.Find(&services).Error
+	err := repo.db.Preload(clause.Associations).Find(&services).Error
 
 	if err != nil {
 		return nil, err
