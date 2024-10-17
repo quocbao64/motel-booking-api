@@ -9,15 +9,17 @@ import (
 var secretKey = []byte(os.Getenv("SECRET_KEY"))
 
 type JWTClaims struct {
-	Email string `json:"email"`
+	Phone string `json:"phone"`
+	Role  string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(email string) (string, error) {
-	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute + 15))
+func GenerateJWT(phone, role string) (string, error) {
+	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Minute * 60 * 24))
 	issuedAt := jwt.NewNumericDate(time.Now())
 	claims := JWTClaims{
-		Email: email,
+		Phone: phone,
+		Role:  role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: expiresAt,
 			IssuedAt:  issuedAt,
@@ -28,14 +30,18 @@ func GenerateJWT(email string) (string, error) {
 	return token.SignedString(secretKey)
 }
 
-func VerifyToken(tokenString string) error {
+func VerifyToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
 
-	if !token.Valid {
-		return err
+	if token == nil {
+		return nil, err
 	}
 
-	return err
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, err
+	}
 }

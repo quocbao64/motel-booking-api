@@ -8,6 +8,8 @@ import (
 type AddressRepository interface {
 	GetFullAddress(id uint) (*dao.AddressResponse, error)
 	Create(address *dao.Address) (*dao.Address, error)
+	Update(address *dao.Address) (*dao.Address, error)
+	GetByID(id uint) (*dao.Address, error)
 }
 
 type AddressRepositoryImpl struct {
@@ -41,4 +43,21 @@ func (repo AddressRepositoryImpl) Create(address *dao.Address) (*dao.Address, er
 		return &dao.Address{}, err
 	}
 	return address, nil
+}
+
+func (repo AddressRepositoryImpl) Update(address *dao.Address) (*dao.Address, error) {
+	err := repo.db.Save(address).Error
+	if err != nil {
+		return &dao.Address{}, err
+	}
+	return address, nil
+}
+
+func (repo AddressRepositoryImpl) GetByID(id uint) (*dao.Address, error) {
+	var address dao.Address
+	err := repo.db.First(&address, id).Error
+	if err != nil {
+		return &dao.Address{}, err
+	}
+	return &address, nil
 }

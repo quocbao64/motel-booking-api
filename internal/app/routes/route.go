@@ -24,7 +24,7 @@ func Route(init *config.Initialize) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:3001"},
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		MaxAge:       12 * time.Hour,
 	}))

@@ -64,22 +64,25 @@ func (repo UserServiceImpl) GetByEmail(c *gin.Context) {
 }
 
 func (repo UserServiceImpl) Create(c *gin.Context) {
-	var repotomer *dao.Users
-	_ = c.BindJSON(&repotomer)
+	var user *dao.Users
+	_ = c.BindJSON(&user)
 
-	passwordHashed, _ := pkg.HashPassword(repotomer.Password)
+	if user.Role == "" {
+		user.Role = constant.USER_ROLE
+	}
 
-	repotomer.Password = passwordHashed
-	repotomerResponse, err := repo.userRepo.Create(repotomer)
+	passwordHashed, _ := pkg.HashPassword(user.Password)
+	user.Password = passwordHashed
 
+	userResponse, err := repo.userRepo.Create(user)
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.InvalidRequest, "Email already exist", pkg.Null()))
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.InvalidRequest, "Email already exists", pkg.Null()))
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), repotomerResponse))
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), userResponse))
 }
 
 func (repo UserServiceImpl) Update(c *gin.Context) {

@@ -3,6 +3,7 @@ package repository
 import (
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepository interface {
@@ -89,7 +90,7 @@ func (repo UserRepositoryImpl) Delete(id int) error {
 
 func (repo UserRepositoryImpl) GetByPhone(phone string) (*dao.UsersResponse, error) {
 	var user *dao.Users
-	err := repo.db.Where("phone = ?", phone).Preload("Address").First(&user).Error
+	err := repo.db.Where("phone = ?", phone).Preload(clause.Associations).First(&user).Error
 
 	if err != nil {
 		return &dao.UsersResponse{}, err

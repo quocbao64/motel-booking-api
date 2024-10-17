@@ -6,6 +6,7 @@ type ServiceDemand struct {
 	NewIndicator int     `gorm:"new_indicator" json:"new_indicator"`
 	ServiceID    uint    `gorm:"service_id" json:"service_id"`
 	InvoiceID    uint    `gorm:"invoice_id" json:"invoice_id"`
+	ContractID   uint    `gorm:"contract_id" json:"contract_id"`
 	Quality      float64 `gorm:"quality" json:"quality"`
 	Amount       float64 `gorm:"amount" json:"amount"`
 	AtMonth      int     `gorm:"at_month" json:"at_month"`

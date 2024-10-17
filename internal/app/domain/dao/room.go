@@ -3,7 +3,7 @@ package dao
 type Room struct {
 	BaseModel
 	Title           string           `gorm:"title" json:"title"`
-	AddressID       uint             `gorm:"address_id" json:"address_id"`
+	Address         Address          `gorm:"polymorphic:Addressable;polymorphicValue:Room" json:"address"`
 	Acreage         int              `gorm:"acreage" json:"acreage"`
 	Price           float64          `gorm:"price" json:"price"`
 	Description     string           `gorm:"description" json:"description"`
@@ -24,7 +24,6 @@ type Image struct {
 
 type RoomRequest struct {
 	Title         string  `json:"title"`
-	AddressID     uint    `json:"address_id"`
 	Acreage       int     `json:"acreage"`
 	Price         float64 `json:"price"`
 	Description   string  `json:"description"`
@@ -35,6 +34,7 @@ type RoomRequest struct {
 	Deposit       float64 `json:"deposit"`
 	Services      []int   `json:"services"`
 	Images        []Image `json:"images"`
+	AddressID     uint    `json:"address_id"`
 }
 
 type RoomResponse struct {

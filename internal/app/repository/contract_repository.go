@@ -3,27 +3,39 @@ package repository
 import (
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ContractFilter struct {
+	RenterID int
+	LessorID int
 }
 
 type ContractRepository interface {
-	GetAll() ([]*dao.Contract, error)
+	GetAll(filter *ContractFilter) ([]*dao.Contract, error)
 	GetByID(id int) (*dao.Contract, error)
 	Create(service *dao.Contract) (*dao.Contract, error)
 	Update(service *dao.Contract) (*dao.Contract, error)
 	Delete(id int) error
-	GetAllByRenterOrLessorID(renterID int, lessorID int) ([]*dao.Contract, error)
 }
 
 type ContractRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func (repo ContractRepositoryImpl) GetAll() ([]*dao.Contract, error) {
+func (repo ContractRepositoryImpl) GetAll(filter *ContractFilter) ([]*dao.Contract, error) {
 	var services []*dao.Contract
-	err := repo.db.Find(&services).Error
+	db := repo.db
+
+	if filter.RenterID != 0 {
+		db = db.Where("renter_id = ?", filter.RenterID)
+	}
+
+	if filter.LessorID != 0 {
+		db = db.Where("lessor_id = ?", filter.LessorID)
+	}
+
+	err := db.Preload(clause.Associations).Find(&services).Error
 
 	if err != nil {
 		return nil, err
@@ -34,7 +46,7 @@ func (repo ContractRepositoryImpl) GetAll() ([]*dao.Contract, error) {
 
 func (repo ContractRepositoryImpl) GetByID(id int) (*dao.Contract, error) {
 	var service *dao.Contract
-	err := repo.db.First(&service, id).Error
+	err := repo.db.Preload(clause.Associations).First(&service, id).Error
 
 	if err != nil {
 		return &dao.Contract{}, err
@@ -71,30 +83,6 @@ func (repo ContractRepositoryImpl) Delete(id int) error {
 	}
 
 	return nil
-}
-
-func (repo ContractRepositoryImpl) GetAllByRenterOrLessorID(renterID int, lessorID int) ([]*dao.Contract, error) {
-	var services []*dao.Contract
-
-	if renterID != 0 {
-		err := repo.db.Where("renter_id = ?", renterID).Find(&services).Error
-
-		if err != nil {
-			return nil, err
-		}
-
-		return services, nil
-	} else if lessorID != 0 {
-		err := repo.db.Where("lessor_id = ?", lessorID).Find(&services).Error
-
-		if err != nil {
-			return nil, err
-		}
-
-		return services, nil
-	}
-
-	return services, nil
 }
 
 func ContractRepositoryInit(db *gorm.DB) *ContractRepositoryImpl {

@@ -48,7 +48,7 @@ func (authSvc AuthServiceImpl) Login(c *gin.Context) {
 	}
 
 	if pkg.ComparePassword(params.Password, data.Password) {
-		tokenString, err := auth.GenerateJWT(params.Phone)
+		tokenString, err := auth.GenerateJWT(params.Phone, string(data.Role))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, pkg.BuildResponse(constant.Success, "Error creating token", data))
 			return
@@ -75,6 +75,7 @@ func (authSvc AuthServiceImpl) Register(c *gin.Context) {
 			user := &dao.Users{
 				Phone:    params.Phone,
 				Password: params.Password,
+				Role:     constant.USER_ROLE,
 			}
 			_, err := authSvc.userRepo.Create(user)
 			if err != nil {

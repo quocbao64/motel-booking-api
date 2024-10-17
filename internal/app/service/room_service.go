@@ -72,6 +72,13 @@ func (repo RoomServiceImpl) GetByID(c *gin.Context) {
 		return
 	}
 
+	address, err := repo.addressRepo.GetFullAddress(data.AddressID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+	data.Address = *address
+
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
@@ -95,9 +102,14 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		}
 	}
 
+	address, err := repo.addressRepo.GetByID(roomReq.AddressID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
 	room := &dao.Room{
 		Title:         roomReq.Title,
-		AddressID:     roomReq.AddressID,
 		Acreage:       roomReq.Acreage,
 		Price:         roomReq.Price,
 		Description:   roomReq.Description,
@@ -107,12 +119,14 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		RoomType:      roomReq.RoomType,
 		Deposit:       roomReq.Deposit,
 		Images:        images,
+		Address:       *address,
 	}
 
 	data, err := repo.roomRepo.Create(room)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
 	}
 
 	if roomReq.Services != nil {
@@ -120,6 +134,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 			err := repo.roomRepo.CreateRoomService(data.ID, uint(service))
 			if err != nil {
 				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+				return
 			}
 		}
 

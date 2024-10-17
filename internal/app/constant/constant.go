@@ -4,6 +4,11 @@ type ResponseStatus int
 type Headers int
 
 const (
+	ADMIN_ROLE = "ADMIN"
+	USER_ROLE  = "USER"
+)
+
+const (
 	PAYMENT_PENDING = iota + 1
 	PAYMENT_COMPLETED
 	PAYMENT_CANCELLED
@@ -17,8 +22,12 @@ const (
 )
 
 const (
-	CONTRACT_AVAILABLE = iota + 1
-	CONTRACT_UNAVAILABLE
+	CONTRACT_PROCESSING = iota + 1
+	CONTRACT_ACTIVE
+	CONTRACT_FINISHED
+	CONTRACT_FAILED
+	ONE_SIDE_CANCELLED
+	AGREE_CANCELLED
 )
 
 const (
