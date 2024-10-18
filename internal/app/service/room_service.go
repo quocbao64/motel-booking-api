@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -93,8 +92,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 	var images []string
 	if roomReq.Images != nil {
 		for _, image := range roomReq.Images {
-			bucket, _ := os.LookupEnv("AWS_BUCKET")
-			url, err := pkg.UploadS3(bucket, "rooms/"+uuid.New().String()+"/"+image.FileName, []byte(image.FileBase64))
+			url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+image.FileName, []byte(image.FileBase64))
 			if err != nil {
 				return
 			}
