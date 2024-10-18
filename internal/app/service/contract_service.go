@@ -6,10 +6,10 @@ import (
 	"awesomeProject/internal/app/domain/dao"
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
@@ -165,8 +165,7 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
-	bucket, _ := os.LookupEnv("AWS_BUCKET")
-	url, err := pkg.UploadS3(bucket, "rooms/"+uuid.New().String()+contractDAO.FileName+"/", []byte(contractDAO.FileBase64))
+	url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+contractDAO.FileName, []byte(contractDAO.FileBase64))
 	if err != nil {
 		return
 	}
@@ -193,8 +192,28 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
+func (repo ContractServiceImpl) Update(c *gin.Context) {
+	var contract *dao.Contract
+	err := c.BindJSON(&contract)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	data, err := repo.contractRepo.Update(contract)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
 	if data.IsLessorSigned && data.IsRenterSigned {
-		hashFile, _ := pkg.HashFileBase64ToSHA256(contractDAO.FileBase64)
+		file, err := pkg.GetFileFromS3(data.FilePath)
+		hashFile, _ := pkg.HashFileBase64ToSHA256(base64.StdEncoding.EncodeToString(file))
 		hashContract := &dao.HashContract{
 			ContractID: data.ID,
 			Hash:       hashFile,
@@ -216,25 +235,6 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 			return
 		}
-	}
-
-	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
-}
-
-func (repo ContractServiceImpl) Update(c *gin.Context) {
-	var contract *dao.Contract
-	err := c.BindJSON(&contract)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
-		return
-	}
-
-	data, err := repo.contractRepo.Update(contract)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
-		return
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))

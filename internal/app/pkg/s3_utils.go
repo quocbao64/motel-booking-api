@@ -9,8 +9,9 @@ import (
 	"os"
 )
 
-func UploadS3(bucket, key string, fileContent []byte) (string, error) {
+func UploadS3(key string, fileContent []byte) (string, error) {
 	region, _ := os.LookupEnv("AWS_REGION")
+	bucket, _ := os.LookupEnv("AWS_BUCKET")
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
@@ -33,8 +34,9 @@ func UploadS3(bucket, key string, fileContent []byte) (string, error) {
 	return fmt.Sprintf("https://%s.s3-%s.amazonaws.com/%s", bucket, region, key), nil
 }
 
-func GetFileFromS3(bucket, key string) ([]byte, error) {
+func GetFileFromS3(key string) ([]byte, error) {
 	region, _ := os.LookupEnv("AWS_REGION")
+	bucket, _ := os.LookupEnv("AWS_BUCKET")
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
