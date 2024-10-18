@@ -1,3 +1,6 @@
 .idea
 .env
 .vendor
+internal/app/blockchain/connection-profile/
+internal/app/blockchain/wallet/
+internal/app/blockchain/organizations/
