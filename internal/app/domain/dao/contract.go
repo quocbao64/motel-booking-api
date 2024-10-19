@@ -29,7 +29,7 @@ type ContractResponse struct {
 	Lessor        UsersResponse   `json:"lessor"`
 	Room          RoomResponse    `json:"room"`
 	MonthlyPrice  float64         `json:"monthly_price"`
-	CanceledBy    *Users          `json:"canceled_by"`
+	CanceledBy    *UsersResponse  `json:"canceled_by"`
 	DateRent      time.Time       `json:"date_rent"`
 	DatePay       time.Time       `json:"date_pay"`
 	PayMode       int             `json:"pay_mode"`
