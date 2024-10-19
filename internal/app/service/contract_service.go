@@ -73,13 +73,17 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 		renter, _ := repo.userRepo.GetByID(int(contract.RenterID))
 		lessor, _ := repo.userRepo.GetByID(int(contract.LessorID))
 		room, _ := repo.roomRepo.GetByID(int(contract.RoomID))
+		var canceledBy *dao.UsersResponse
+		if contract.CanceledBy != nil {
+			canceledBy, err = repo.userRepo.GetByID(int(*contract.CanceledBy))
+		}
 		contracts = append(contracts, dao.ContractResponse{
 			ID:            contract.ID,
 			Renter:        *renter,
 			Lessor:        *lessor,
 			Room:          *room,
 			MonthlyPrice:  contract.MonthlyPrice,
-			CanceledBy:    nil,
+			CanceledBy:    canceledBy,
 			DateRent:      contract.DateRent,
 			DatePay:       contract.DatePay,
 			PayMode:       contract.PayMode,
