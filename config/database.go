@@ -23,8 +23,9 @@ func ConnectDB() (db *gorm.DB) {
 
 	dst := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai", dbHost, dbUser, dbPassword, dbName, dbPort)
 	db, err = gorm.Open(postgres.Open(dst), &gorm.Config{
-		TranslateError: true,
-		Logger:         logger.Default.LogMode(logger.Info),
+		TranslateError:                           true,
+		Logger:                                   logger.Default.LogMode(logger.Info),
+		DisableForeignKeyConstraintWhenMigrating: false,
 	})
 
 	if err != nil {
