@@ -23,12 +23,13 @@ type ContractService interface {
 }
 
 type ContractServiceImpl struct {
-	contractRepo       repository.ContractRepository
-	hashContractRepo   repository.HashContractRepository
-	servicesDemandRepo repository.ServicesDemandRepository
-	invoiceRepo        repository.InvoiceRepository
-	roomRepo           repository.RoomRepository
-	userRepo           repository.UserRepository
+	contractRepo        repository.ContractRepository
+	hashContractRepo    repository.HashContractRepository
+	servicesDemandRepo  repository.ServicesDemandRepository
+	invoiceRepo         repository.InvoiceRepository
+	roomRepo            repository.RoomRepository
+	userRepo            repository.UserRepository
+	servicesHistoryRepo repository.ServicesHistoryRepository
 }
 
 type ContractParams struct {
@@ -78,21 +79,22 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			canceledBy, err = repo.userRepo.GetByID(int(*contract.CanceledBy))
 		}
 		contracts = append(contracts, dao.ContractResponse{
-			ID:            contract.ID,
-			Renter:        *renter,
-			Lessor:        *lessor,
-			Room:          *room,
-			MonthlyPrice:  contract.MonthlyPrice,
-			CanceledBy:    canceledBy,
-			DateRent:      contract.DateRent,
-			DatePay:       contract.DatePay,
-			PayMode:       contract.PayMode,
-			Payment:       contract.Payment,
-			Status:        contract.Status,
-			IsEnable:      contract.IsEnable,
-			FilePath:      contract.FilePath,
-			Invoices:      contract.Invoices,
-			ServiceDemand: contract.ServiceDemands,
+			ID:              contract.ID,
+			Renter:          *renter,
+			Lessor:          *lessor,
+			Room:            *room,
+			MonthlyPrice:    contract.MonthlyPrice,
+			CanceledBy:      canceledBy,
+			DateRent:        contract.DateRent,
+			DatePay:         contract.DatePay,
+			PayMode:         contract.PayMode,
+			Payment:         contract.Payment,
+			Status:          contract.Status,
+			IsEnable:        contract.IsEnable,
+			FilePath:        contract.FilePath,
+			Invoices:        contract.Invoices,
+			ServiceDemand:   contract.ServiceDemands,
+			ServicesHistory: contract.ServicesHistory,
 		})
 	}
 
@@ -144,21 +146,22 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		canceledBy, err = repo.userRepo.GetByID(int(*data.CanceledBy))
 	}
 	contract := dao.ContractResponse{
-		ID:            data.ID,
-		Renter:        *renter,
-		Lessor:        *lessor,
-		Room:          *room,
-		MonthlyPrice:  data.MonthlyPrice,
-		CanceledBy:    canceledBy,
-		DateRent:      data.DateRent,
-		DatePay:       data.DatePay,
-		PayMode:       data.PayMode,
-		Payment:       data.Payment,
-		Status:        data.Status,
-		IsEnable:      data.IsEnable,
-		FilePath:      data.FilePath,
-		Invoices:      data.Invoices,
-		ServiceDemand: data.ServiceDemands,
+		ID:              data.ID,
+		Renter:          *renter,
+		Lessor:          *lessor,
+		Room:            *room,
+		MonthlyPrice:    data.MonthlyPrice,
+		CanceledBy:      canceledBy,
+		DateRent:        data.DateRent,
+		DatePay:         data.DatePay,
+		PayMode:         data.PayMode,
+		Payment:         data.Payment,
+		Status:          data.Status,
+		IsEnable:        data.IsEnable,
+		FilePath:        data.FilePath,
+		Invoices:        data.Invoices,
+		ServiceDemand:   data.ServiceDemands,
+		ServicesHistory: data.ServicesHistory,
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
@@ -194,6 +197,37 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		MonthlyPrice:   contractDAO.MonthlyPrice,
 	}
 	data, err := repo.contractRepo.Create(contract)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	room, err := repo.roomRepo.GetByID(contractDAO.RoomID)
+	var servicesHistory []dao.ServicesHistory
+	for _, service := range room.Services {
+		servicesHistory = append(servicesHistory, dao.ServicesHistory{
+			ServiceID:   service.ID,
+			IconURL:     service.IconURL,
+			Price:       service.Price,
+			IsEnable:    service.IsEnable,
+			ContractID:  data.ID,
+			ServiceName: service.Name,
+		})
+	}
+
+	dataHistory, err := repo.servicesHistoryRepo.CreateMultiple(servicesHistory)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	if len(dataHistory) > 0 {
+		data.ServicesHistory = dataHistory
+	}
+
+	_, err = repo.contractRepo.Update(data)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -266,13 +300,15 @@ func ContractServiceInit(
 	servicesDemandRepo repository.ServicesDemandRepository,
 	invoiceRepo repository.InvoiceRepository,
 	roomRepo repository.RoomRepository,
-	userRepo repository.UserRepository) *ContractServiceImpl {
+	userRepo repository.UserRepository,
+	servicesHistoryRepo repository.ServicesHistoryRepository) *ContractServiceImpl {
 	return &ContractServiceImpl{
-		contractRepo:       repo,
-		hashContractRepo:   hashContractRepo,
-		servicesDemandRepo: servicesDemandRepo,
-		invoiceRepo:        invoiceRepo,
-		roomRepo:           roomRepo,
-		userRepo:           userRepo,
+		contractRepo:        repo,
+		hashContractRepo:    hashContractRepo,
+		servicesDemandRepo:  servicesDemandRepo,
+		invoiceRepo:         invoiceRepo,
+		roomRepo:            roomRepo,
+		userRepo:            userRepo,
+		servicesHistoryRepo: servicesHistoryRepo,
 	}
 }

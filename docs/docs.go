@@ -113,10 +113,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 }
             }
         },

@@ -39,7 +39,8 @@ func Init() *Initialize {
 	contractRepositoryImpl := repository.ContractRepositoryInit(gormDB)
 	servicesDemandRepositoryImpl := repository.ServicesDemandRepositoryInit(gormDB)
 	invoiceRepositoryImpl := repository.InvoiceRepositoryInit(gormDB)
-	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl)
+	servicesHistoryRepositoryImpl := repository.ServicesHistoryRepositoryInit(gormDB)
+	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl, servicesHistoryRepositoryImpl)
 	contractControllerImpl := controller.ContractControllerInit(contractServiceImpl)
 	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl)
 	invoiceControllerImpl := controller.InvoiceControllerInit(invoiceServiceImpl)
@@ -48,7 +49,7 @@ func Init() *Initialize {
 	bookingRequestRepositoryImpl := repository.BookingRequestRepositoryInit(gormDB)
 	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl)
 	bookingRequestControllerImpl := controller.BookingRequestControllerInit(bookingRequestServiceImpl)
-	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl)
+	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl)
 	return initialize
 }
 
@@ -117,3 +118,5 @@ var bookingRequestSvcSet = wire.NewSet(service.BookingRequestServiceInit, wire.B
 var bookingRequestCtrlSet = wire.NewSet(controller.BookingRequestControllerInit, wire.Bind(new(controller.BookingRequestController), new(*controller.BookingRequestControllerImpl)))
 
 var bookingRequestRepoSet = wire.NewSet(repository.BookingRequestRepositoryInit, wire.Bind(new(repository.BookingRequestRepository), new(*repository.BookingRequestRepositoryImpl)))
+
+var servicesHistoryRepoSet = wire.NewSet(repository.ServicesHistoryRepositoryInit, wire.Bind(new(repository.ServicesHistoryRepository), new(*repository.ServicesHistoryRepositoryImpl)))

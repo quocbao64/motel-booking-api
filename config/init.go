@@ -38,6 +38,7 @@ type Initialize struct {
 	BookingRequestCtrl controller.BookingRequestController
 	BookingRequestSvc  service.BookingRequestService
 	BookingRequestRepo repository.BookingRequestRepository
+	ServicesHistory    repository.ServicesHistoryRepository
 }
 
 func NewInitialize(
@@ -72,6 +73,7 @@ func NewInitialize(
 	bookingRequestCtrl controller.BookingRequestController,
 	bookingRequestSvc service.BookingRequestService,
 	bookingRequestRepo repository.BookingRequestRepository,
+	servicesHistory repository.ServicesHistoryRepository,
 ) *Initialize {
 	return &Initialize{
 		AuthCtrl:           authCtrl,
@@ -105,5 +107,6 @@ func NewInitialize(
 		BookingRequestCtrl: bookingRequestCtrl,
 		BookingRequestSvc:  bookingRequestSvc,
 		BookingRequestRepo: bookingRequestRepo,
+		ServicesHistory:    servicesHistory,
 	}
 }

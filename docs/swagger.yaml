@@ -32,9 +32,7 @@ definitions:
       refresh_token:
         type: string
       role:
-        items:
-          type: integer
-        type: array
+        type: string
     type: object
   service.LoginResponse:
     properties:

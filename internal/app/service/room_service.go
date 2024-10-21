@@ -135,7 +135,6 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 				return
 			}
 		}
-
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
