@@ -86,16 +86,23 @@ func (repo UserServiceImpl) Create(c *gin.Context) {
 }
 
 func (repo UserServiceImpl) Update(c *gin.Context) {
-	var repotomer *dao.Users
-	_ = c.BindJSON(&repotomer)
+	var user *dao.Users
+	_ = c.BindJSON(&user)
 
-	repotomerResponse, err := repo.userRepo.Update(repotomer)
+	existingUser, err := repo.userRepo.GetByID(int(user.ID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, pkg.BuildResponse(constant.InvalidRequest, "User not found", pkg.Null()))
+		return
+	}
+
+	user.Password = existingUser.Password
+	user, err = repo.userRepo.Update(user)
 
 	if err != nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), repotomerResponse))
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), user))
 }
 
 func (repo UserServiceImpl) Delete(c *gin.Context) {
