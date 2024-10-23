@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func UploadS3(key string, fileContent []byte) (string, error) {
+func UploadS3(key string, fileContent []byte, fileType string) (string, error) {
 	region, _ := os.LookupEnv("AWS_REGION")
 	bucket, _ := os.LookupEnv("AWS_BUCKET")
 	sess, err := session.NewSession(&aws.Config{
@@ -22,9 +22,10 @@ func UploadS3(key string, fileContent []byte) (string, error) {
 	svc := s3.New(sess)
 
 	_, err = svc.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   bytes.NewReader(fileContent),
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(fileContent),
+		ContentType: aws.String(fileType),
 	})
 	if err != nil {
 		fmt.Println("Error uploading file:", err)
@@ -34,7 +35,7 @@ func UploadS3(key string, fileContent []byte) (string, error) {
 	return fmt.Sprintf("https://%s.s3-%s.amazonaws.com/%s", bucket, region, key), nil
 }
 
-func GetFileFromS3(key string) ([]byte, error) {
+func GetFileFromS3(key string, fileType string) ([]byte, error) {
 	region, _ := os.LookupEnv("AWS_REGION")
 	bucket, _ := os.LookupEnv("AWS_BUCKET")
 	sess, err := session.NewSession(&aws.Config{
@@ -47,8 +48,9 @@ func GetFileFromS3(key string) ([]byte, error) {
 	svc := s3.New(sess)
 
 	result, err := svc.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket:              aws.String(bucket),
+		Key:                 aws.String(key),
+		ResponseContentType: aws.String(fileType),
 	})
 	if err != nil {
 		fmt.Println("Error getting file:", err)

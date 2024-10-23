@@ -176,7 +176,8 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
-	url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+contractDAO.FileName, []byte(contractDAO.FileBase64))
+	fileContent, err := base64.StdEncoding.DecodeString(contractDAO.FileBase64)
+	url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+contractDAO.FileName, fileContent, "application/pdf")
 	if err != nil {
 		return
 	}
@@ -254,7 +255,7 @@ func (repo ContractServiceImpl) Update(c *gin.Context) {
 	}
 
 	if data.IsLessorSigned && data.IsRenterSigned {
-		file, err := pkg.GetFileFromS3(data.FilePath)
+		file, err := pkg.GetFileFromS3(data.FilePath, "application/pdf")
 		hashFile, _ := pkg.HashFileBase64ToSHA256(base64.StdEncoding.EncodeToString(file))
 		hashContract := &dao.HashContract{
 			ContractID: data.ID,

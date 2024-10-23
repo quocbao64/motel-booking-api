@@ -92,7 +92,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 	var images []string
 	if roomReq.Images != nil {
 		for _, image := range roomReq.Images {
-			url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+image.FileName, []byte(image.FileBase64))
+			url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+image.FileName, []byte(image.FileBase64), "image")
 			if err != nil {
 				return
 			}
