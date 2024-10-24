@@ -41,6 +41,7 @@ func Route(init *config.Initialize) *gin.Engine {
 		InvoiceRoute(init, api.Group("/invoices"))
 		ServiceDemandRoute(init, api.Group("/services-demand"))
 		BookingRequestRoute(init, api.Group("/booking-requests"))
+		TransactionRoute(init, api.Group("/transactions"))
 	}
 
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

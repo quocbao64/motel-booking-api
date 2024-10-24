@@ -108,6 +108,15 @@ var bookingRequestRepoSet = wire.NewSet(repository.BookingRequestRepositoryInit,
 var servicesHistoryRepoSet = wire.NewSet(repository.ServicesHistoryRepositoryInit,
 	wire.Bind(new(repository.ServicesHistoryRepository), new(*repository.ServicesHistoryRepositoryImpl)))
 
+var transactionRepoSet = wire.NewSet(repository.TransactionRepositoryInit,
+	wire.Bind(new(repository.TransactionRepository), new(*repository.TransactionRepositoryImpl)))
+
+var transactionSvcSet = wire.NewSet(service.TransactionServiceInit,
+	wire.Bind(new(service.TransactionService), new(*service.TransactionServiceImpl)))
+
+var transactionCtrlSet = wire.NewSet(controller.TransactionControllerInit,
+	wire.Bind(new(controller.TransactionController), new(*controller.TransactionControllerImpl)))
+
 func Init() *Initialize {
 	wire.Build(
 		db,
@@ -143,6 +152,9 @@ func Init() *Initialize {
 		bookingRequestSvcSet,
 		bookingRequestRepoSet,
 		servicesHistoryRepoSet,
+		transactionCtrlSet,
+		transactionSvcSet,
+		transactionRepoSet,
 		NewInitialize)
 	return nil
 }

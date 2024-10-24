@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-type InvoiceService interface {
+type TransactionService interface {
 	GetAll(c *gin.Context)
 	GetByID(c *gin.Context)
 	Create(c *gin.Context)
@@ -18,15 +18,17 @@ type InvoiceService interface {
 	Delete(c *gin.Context)
 }
 
-type InvoiceServiceImpl struct {
-	contractRepo       repository.InvoiceRepository
-	servicesDemandRepo repository.ServicesDemandRepository
-	transactionRepo    repository.TransactionRepository
+type TransactionServiceImpl struct {
+	transactionRepo repository.TransactionRepository
 }
 
-func (repo InvoiceServiceImpl) GetAll(c *gin.Context) {
-	data, err := repo.contractRepo.GetAll()
+func (repo TransactionServiceImpl) GetAll(c *gin.Context) {
+	userID, _ := strconv.Atoi(c.Query("user_id"))
+	filter := &repository.TransactionFilter{
+		UserID: userID,
+	}
 
+	data, err := repo.transactionRepo.GetAll(filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
@@ -35,9 +37,9 @@ func (repo InvoiceServiceImpl) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
-func (repo InvoiceServiceImpl) GetByID(c *gin.Context) {
+func (repo TransactionServiceImpl) GetByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data, err := repo.contractRepo.GetByID(id)
+	data, err := repo.transactionRepo.GetByID(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -47,35 +49,16 @@ func (repo InvoiceServiceImpl) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
-func (repo InvoiceServiceImpl) Create(c *gin.Context) {
-	var invoice *dao.Invoice
-	err := c.BindJSON(&invoice)
+func (repo TransactionServiceImpl) Create(c *gin.Context) {
+	var transaction *dao.Transaction
+	err := c.BindJSON(&transaction)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
-	data, err := repo.contractRepo.Create(invoice)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
-		return
-	}
-
-	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
-}
-
-func (repo InvoiceServiceImpl) Update(c *gin.Context) {
-	var contract *dao.Invoice
-	err := c.BindJSON(&contract)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
-		return
-	}
-
-	data, err := repo.contractRepo.Update(contract)
+	data, err := repo.transactionRepo.Create(transaction)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -85,9 +68,28 @@ func (repo InvoiceServiceImpl) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
-func (repo InvoiceServiceImpl) Delete(c *gin.Context) {
+func (repo TransactionServiceImpl) Update(c *gin.Context) {
+	var transaction *dao.Transaction
+	err := c.BindJSON(&transaction)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	data, err := repo.transactionRepo.Update(transaction)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
+func (repo TransactionServiceImpl) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := repo.contractRepo.Delete(id)
+	err := repo.transactionRepo.Delete(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -97,12 +99,6 @@ func (repo InvoiceServiceImpl) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), pkg.Null()))
 }
 
-func InvoiceServiceInit(repo repository.InvoiceRepository,
-	servicesDemandRepo repository.ServicesDemandRepository,
-	transactionRepo repository.TransactionRepository) *InvoiceServiceImpl {
-	return &InvoiceServiceImpl{
-		contractRepo:       repo,
-		servicesDemandRepo: servicesDemandRepo,
-		transactionRepo:    transactionRepo,
-	}
+func TransactionServiceInit(repo repository.TransactionRepository) *TransactionServiceImpl {
+	return &TransactionServiceImpl{transactionRepo: repo}
 }

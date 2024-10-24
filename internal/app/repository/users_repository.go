@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"awesomeProject/internal/app/constant"
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -97,6 +98,29 @@ func (repo UserRepositoryImpl) GetByPhone(phone string) (*dao.UsersResponse, err
 	}
 
 	return userToUserResponse(user), nil
+}
+
+func (repo UserRepositoryImpl) UpdateBalance(id uint, transType int, balance float64) error {
+	var user *dao.Users
+	err := repo.db.First(&user, id).Error
+
+	if err != nil {
+		return err
+	}
+
+	if transType == constant.TRANSACTION_DEPOSIT || transType == constant.TRANSACTION_REFUND {
+		user.Balance += balance
+	} else if transType == constant.TRANSACTION_WITHDRAW || transType == constant.TRANSACTION_PAYMENT {
+		user.Balance -= balance
+	}
+
+	err = repo.db.Save(&user).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func UserRepositoryInit(db *gorm.DB) *UserRepositoryImpl {

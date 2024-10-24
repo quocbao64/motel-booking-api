@@ -15,7 +15,8 @@ type Invoice struct {
 	IsEnable       bool            `gorm:"is_enable" json:"is_enable"`
 	IsExtend       bool            `gorm:"is_extend" json:"is_extend"`
 	Hash           string          `gorm:"hash" json:"hash"`
-	TransactionID  *uint           `gorm:"transaction_id" json:"transaction_id"`
+	TransactionID  uint            `gorm:"transaction_id" json:"transaction_id"`
 	AtMonth        int             `gorm:"at_month" json:"at_month"`
 	AtYear         int             `gorm:"at_year" json:"at_year"`
+	Transaction    *Transaction    `gorm:"foreignKey:TransactionID;constraint:OnDelete:CASCADE;" json:"transaction"`
 }

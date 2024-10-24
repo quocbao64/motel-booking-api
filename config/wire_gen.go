@@ -42,14 +42,17 @@ func Init() *Initialize {
 	servicesHistoryRepositoryImpl := repository.ServicesHistoryRepositoryInit(gormDB)
 	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl, servicesHistoryRepositoryImpl)
 	contractControllerImpl := controller.ContractControllerInit(contractServiceImpl)
-	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl, servicesDemandRepositoryImpl)
+	transactionRepositoryImpl := repository.TransactionRepositoryInit(gormDB)
+	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl, servicesDemandRepositoryImpl, transactionRepositoryImpl)
 	invoiceControllerImpl := controller.InvoiceControllerInit(invoiceServiceImpl)
 	servicesDemandServiceImpl := service.ServicesDemandServiceInit(servicesDemandRepositoryImpl)
 	servicesDemandControllerImpl := controller.ServicesDemandControllerInit(servicesDemandServiceImpl)
 	bookingRequestRepositoryImpl := repository.BookingRequestRepositoryInit(gormDB)
 	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl)
 	bookingRequestControllerImpl := controller.BookingRequestControllerInit(bookingRequestServiceImpl)
-	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl)
+	transactionServiceImpl := service.TransactionServiceInit(transactionRepositoryImpl)
+	transactionControllerImpl := controller.TransactionControllerInit(transactionServiceImpl)
+	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl, transactionControllerImpl, transactionServiceImpl, transactionRepositoryImpl)
 	return initialize
 }
 
@@ -120,3 +123,9 @@ var bookingRequestCtrlSet = wire.NewSet(controller.BookingRequestControllerInit,
 var bookingRequestRepoSet = wire.NewSet(repository.BookingRequestRepositoryInit, wire.Bind(new(repository.BookingRequestRepository), new(*repository.BookingRequestRepositoryImpl)))
 
 var servicesHistoryRepoSet = wire.NewSet(repository.ServicesHistoryRepositoryInit, wire.Bind(new(repository.ServicesHistoryRepository), new(*repository.ServicesHistoryRepositoryImpl)))
+
+var transactionRepoSet = wire.NewSet(repository.TransactionRepositoryInit, wire.Bind(new(repository.TransactionRepository), new(*repository.TransactionRepositoryImpl)))
+
+var transactionSvcSet = wire.NewSet(service.TransactionServiceInit, wire.Bind(new(service.TransactionService), new(*service.TransactionServiceImpl)))
+
+var transactionCtrlSet = wire.NewSet(controller.TransactionControllerInit, wire.Bind(new(controller.TransactionController), new(*controller.TransactionControllerImpl)))
