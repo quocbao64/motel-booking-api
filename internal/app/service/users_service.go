@@ -20,6 +20,7 @@ type UserService interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	UpdateBalance(c *gin.Context)
 }
 
 type UserServiceImpl struct {
@@ -126,6 +127,23 @@ func (repo UserServiceImpl) GetByPhone(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
+func (repo UserServiceImpl) UpdateBalance(c *gin.Context) {
+	var user *dao.Users
+	_ = c.BindJSON(&user)
+
+	err := repo.userRepo.UpdateBalance(user.ID, 0, user.Balance)
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.InvalidRequest, "User not found", pkg.Null()))
+		}
+
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.InvalidRequest, "Failed to update balance", pkg.Null()))
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), "Balance updated"))
 }
 
 func UserServiceInit(userRepo repository.UserRepository, addressRepo repository.AddressRepository) *UserServiceImpl {

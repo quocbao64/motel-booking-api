@@ -13,6 +13,7 @@ type UserController interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	UpdateBalance(c *gin.Context)
 }
 
 type UserControllerImpl struct {
@@ -45,6 +46,10 @@ func (cus UserControllerImpl) Delete(c *gin.Context) {
 
 func (cus UserControllerImpl) GetByPhone(c *gin.Context) {
 	cus.customerSvc.GetByPhone(c)
+}
+
+func (cus UserControllerImpl) UpdateBalance(c *gin.Context) {
+	cus.customerSvc.UpdateBalance(c)
 }
 
 func UserControllerInit(UserService service.UserService) *UserControllerImpl {

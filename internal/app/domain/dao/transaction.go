@@ -10,5 +10,5 @@ type Transaction struct {
 	BalanceAfter    float64 `gorm:"column:balance_after" json:"balance_after"`
 	Description     string  `gorm:"column:description" json:"description"`
 	PaymentMethod   int     `gorm:"column:payment_method" json:"payment_method"`
-	TransactionNo   string  `gorm:"column:transaction_no" json:"transaction_no"`
+	TransactionNo   string  `gorm:"index:idx_trans_no,unique" json:"transaction_no"`
 }

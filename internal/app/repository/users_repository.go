@@ -15,6 +15,7 @@ type UserRepository interface {
 	Create(user *dao.Users) (*dao.Users, error)
 	Update(user *dao.Users) (*dao.Users, error)
 	Delete(id int) error
+	UpdateBalance(id uint, transType int, balance float64) error
 }
 
 type UserRepositoryImpl struct {
@@ -108,10 +109,14 @@ func (repo UserRepositoryImpl) UpdateBalance(id uint, transType int, balance flo
 		return err
 	}
 
-	if transType == constant.TRANSACTION_DEPOSIT || transType == constant.TRANSACTION_REFUND {
-		user.Balance += balance
-	} else if transType == constant.TRANSACTION_WITHDRAW || transType == constant.TRANSACTION_PAYMENT {
-		user.Balance -= balance
+	if transType > 0 {
+		if transType == constant.TRANSACTION_DEPOSIT || transType == constant.TRANSACTION_REFUND {
+			user.Balance += balance
+		} else if transType == constant.TRANSACTION_WITHDRAW || transType == constant.TRANSACTION_PAYMENT {
+			user.Balance -= balance
+		}
+	} else {
+		user.Balance = balance
 	}
 
 	err = repo.db.Save(&user).Error
