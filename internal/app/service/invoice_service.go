@@ -19,7 +19,8 @@ type InvoiceService interface {
 }
 
 type InvoiceServiceImpl struct {
-	contractRepo repository.InvoiceRepository
+	contractRepo       repository.InvoiceRepository
+	servicesDemandRepo repository.ServicesDemandRepository
 }
 
 func (repo InvoiceServiceImpl) GetAll(c *gin.Context) {
@@ -46,15 +47,15 @@ func (repo InvoiceServiceImpl) GetByID(c *gin.Context) {
 }
 
 func (repo InvoiceServiceImpl) Create(c *gin.Context) {
-	var contract *dao.Invoice
-	err := c.BindJSON(&contract)
+	var invoice *dao.Invoice
+	err := c.BindJSON(&invoice)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
-	data, err := repo.contractRepo.Create(contract)
+	data, err := repo.contractRepo.Create(invoice)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -95,6 +96,6 @@ func (repo InvoiceServiceImpl) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), pkg.Null()))
 }
 
-func InvoiceServiceInit(repo repository.InvoiceRepository) *InvoiceServiceImpl {
-	return &InvoiceServiceImpl{contractRepo: repo}
+func InvoiceServiceInit(repo repository.InvoiceRepository, servicesDemandRepo repository.ServicesDemandRepository) *InvoiceServiceImpl {
+	return &InvoiceServiceImpl{contractRepo: repo, servicesDemandRepo: servicesDemandRepo}
 }

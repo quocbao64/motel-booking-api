@@ -42,7 +42,7 @@ func Init() *Initialize {
 	servicesHistoryRepositoryImpl := repository.ServicesHistoryRepositoryInit(gormDB)
 	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl, servicesHistoryRepositoryImpl)
 	contractControllerImpl := controller.ContractControllerInit(contractServiceImpl)
-	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl)
+	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl, servicesDemandRepositoryImpl)
 	invoiceControllerImpl := controller.InvoiceControllerInit(invoiceServiceImpl)
 	servicesDemandServiceImpl := service.ServicesDemandServiceInit(servicesDemandRepositoryImpl)
 	servicesDemandControllerImpl := controller.ServicesDemandControllerInit(servicesDemandServiceImpl)

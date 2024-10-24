@@ -49,15 +49,6 @@ func (repo InvoiceRepositoryImpl) Create(invoice *dao.Invoice) (*dao.Invoice, er
 			return err
 		}
 
-		if invoice.ServiceDemands != nil {
-			for _, serviceDemand := range *invoice.ServiceDemands {
-				serviceDemand.InvoiceID = invoice.ID
-				if err := tx.Create(&serviceDemand).Error; err != nil {
-					return err
-				}
-			}
-		}
-
 		return nil
 	})
 
@@ -71,7 +62,7 @@ func (repo InvoiceRepositoryImpl) Create(invoice *dao.Invoice) (*dao.Invoice, er
 func (repo InvoiceRepositoryImpl) Update(invoice *dao.Invoice) (*dao.Invoice, error) {
 	err := repo.db.Transaction(func(tx *gorm.DB) error {
 		if invoice.ServiceDemands != nil {
-			for _, serviceDemand := range *invoice.ServiceDemands {
+			for _, serviceDemand := range invoice.ServiceDemands {
 				serviceDemand.InvoiceID = invoice.ID
 				if err := tx.Create(&serviceDemand).Error; err != nil {
 					return err

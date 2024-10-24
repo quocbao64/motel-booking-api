@@ -42,6 +42,18 @@ const (
 )
 
 const (
+	TRANSACTION_DEPOSIT = iota + 1
+	TRANSACTION_WITHDRAW
+	TRANSACTION_PAYMENT
+	TRANSACTION_REFUND
+)
+
+const (
+	TRANSACTION_SUCCESS = iota + 1
+	TRANSACTION_FAILED
+)
+
+const (
 	Success ResponseStatus = iota + 1
 	DataNotFound
 	InvalidRequest
