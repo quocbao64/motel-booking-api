@@ -11,5 +11,6 @@ func UserRoute(init *config.Initialize, g *gin.RouterGroup) *gin.RouterGroup {
 	g.POST("", init.UserCtrl.Create)
 	g.PUT("/:id", middleware.AuthMiddleware(), init.UserCtrl.Update)
 	g.PUT("/balance", middleware.AuthMiddleware(), init.UserCtrl.UpdateBalance)
+	g.GET("/:id", middleware.AuthMiddleware(), init.UserCtrl.GetByID)
 	return g
 }
