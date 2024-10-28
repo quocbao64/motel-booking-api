@@ -158,7 +158,7 @@ func CreateAssets(contract *client.Contract, contractDAO *dao.Contract) error {
 		strconv.Itoa(contractDAO.Status),
 		strconv.Itoa(int(contractDAO.ID)),
 		strconv.Itoa(contractDAO.PayMode),
-		contractDAO.DateRent.Format("2006-01-02"),
+		contractDAO.StartDate.Format("2006-01-02"),
 		contractDAO.DatePay.Format("2006-01-02"),
 		strconv.FormatFloat(contractDAO.Payment, 'f', -1, 64),
 		strconv.FormatBool(contractDAO.IsEnable),
