@@ -52,7 +52,10 @@ func Init() *Initialize {
 	bookingRequestControllerImpl := controller.BookingRequestControllerInit(bookingRequestServiceImpl)
 	transactionServiceImpl := service.TransactionServiceInit(transactionRepositoryImpl)
 	transactionControllerImpl := controller.TransactionControllerInit(transactionServiceImpl)
-	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl, transactionControllerImpl, transactionServiceImpl, transactionRepositoryImpl)
+	signatureRepositoryImpl := repository.SignatureRepositoryInit(gormDB)
+	signatureServiceImpl := service.SignatureServiceInit(signatureRepositoryImpl)
+	signatureControllerImpl := controller.SignatureControllerInit(signatureServiceImpl)
+	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl, transactionControllerImpl, transactionServiceImpl, transactionRepositoryImpl, signatureControllerImpl, signatureServiceImpl, signatureRepositoryImpl)
 	return initialize
 }
 
@@ -129,3 +132,9 @@ var transactionRepoSet = wire.NewSet(repository.TransactionRepositoryInit, wire.
 var transactionSvcSet = wire.NewSet(service.TransactionServiceInit, wire.Bind(new(service.TransactionService), new(*service.TransactionServiceImpl)))
 
 var transactionCtrlSet = wire.NewSet(controller.TransactionControllerInit, wire.Bind(new(controller.TransactionController), new(*controller.TransactionControllerImpl)))
+
+var signatureRepoSet = wire.NewSet(repository.SignatureRepositoryInit, wire.Bind(new(repository.SignatureRepository), new(*repository.SignatureRepositoryImpl)))
+
+var signatureSvcSet = wire.NewSet(service.SignatureServiceInit, wire.Bind(new(service.SignatureService), new(*service.SignatureServiceImpl)))
+
+var signatureCtrlSet = wire.NewSet(controller.SignatureControllerInit, wire.Bind(new(controller.SignatureController), new(*controller.SignatureControllerImpl)))

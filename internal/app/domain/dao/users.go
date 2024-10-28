@@ -28,4 +28,5 @@ type UsersResponse struct {
 	IdentityNumber string          `json:"identity_number"`
 	Address        AddressResponse `json:"address"`
 	Password       string          `json:"-"`
+	Balance        float64         `json:"balance"`
 }

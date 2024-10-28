@@ -42,6 +42,9 @@ type Initialize struct {
 	TransactionSvc     service.TransactionService
 	TransactionCtrl    controller.TransactionController
 	TransactionRepo    repository.TransactionRepository
+	SignatureSvc       service.SignatureService
+	SignatureCtrl      controller.SignatureController
+	SignatureRepo      repository.SignatureRepository
 }
 
 func NewInitialize(
@@ -80,6 +83,9 @@ func NewInitialize(
 	transactionCtrl controller.TransactionController,
 	transactionSvc service.TransactionService,
 	transactionRepo repository.TransactionRepository,
+	signatureCtrl controller.SignatureController,
+	signatureSvc service.SignatureService,
+	signatureRepo repository.SignatureRepository,
 ) *Initialize {
 	return &Initialize{
 		AuthCtrl:           authCtrl,
@@ -117,5 +123,8 @@ func NewInitialize(
 		TransactionCtrl:    transactionCtrl,
 		TransactionSvc:     transactionSvc,
 		TransactionRepo:    transactionRepo,
+		SignatureCtrl:      signatureCtrl,
+		SignatureSvc:       signatureSvc,
+		SignatureRepo:      signatureRepo,
 	}
 }

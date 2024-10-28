@@ -90,14 +90,7 @@ func (repo UserServiceImpl) Update(c *gin.Context) {
 	var user *dao.Users
 	_ = c.BindJSON(&user)
 
-	existingUser, err := repo.userRepo.GetByID(int(user.ID))
-	if err != nil {
-		c.JSON(http.StatusNotFound, pkg.BuildResponse(constant.InvalidRequest, "User not found", pkg.Null()))
-		return
-	}
-
-	user.Password = existingUser.Password
-	user, err = repo.userRepo.Update(user)
+	user, err := repo.userRepo.Update(user)
 
 	if err != nil {
 		return

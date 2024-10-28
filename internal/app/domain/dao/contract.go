@@ -9,7 +9,7 @@ type Contract struct {
 	RoomID          uint              `gorm:"room_id" json:"room_id"`
 	MonthlyPrice    float64           `gorm:"monthly_price" json:"monthly_price"`
 	CanceledBy      *uint             `gorm:"canceled_by" json:"canceled_by"`
-	DateRent        time.Time         `gorm:"date_rent" json:"date_rent"`
+	StartDate       time.Time         `gorm:"start_date" json:"start_date"`
 	DatePay         time.Time         `gorm:"date_pay" json:"date_pay"`
 	PayMode         int               `gorm:"pay_mode" json:"pay_mode"`
 	Payment         float64           `gorm:"payment" json:"payment"`
@@ -20,8 +20,11 @@ type Contract struct {
 	IsLessorSigned  bool              `gorm:"is_lessor_signed" json:"is_lessor_signed"`
 	Invoices        []Invoice         `gorm:"foreignKey:ContractID" json:"invoices"`
 	HashContracts   []HashContract    `gorm:"foreignKey:ContractID" json:"hash_contracts"`
-	ServiceDemands  []ServiceDemand   `gorm:"foreignKey:ContractID" json:"service_demands"`
 	ServicesHistory []ServicesHistory `gorm:"foreignKey:ContractID" json:"services_history"`
+	Title           string            `gorm:"title" json:"title"`
+	RentalDuration  int               `gorm:"rental_duration" json:"rental_duration"`
+	Deposit         float64           `gorm:"deposit" json:"deposit"`
+	CancelStatus    int               `gorm:"cancel_status" json:"cancel_status"`
 }
 
 type ContractResponse struct {
@@ -31,7 +34,7 @@ type ContractResponse struct {
 	Room            RoomResponse      `json:"room"`
 	MonthlyPrice    float64           `json:"monthly_price"`
 	CanceledBy      *UsersResponse    `json:"canceled_by"`
-	DateRent        time.Time         `json:"date_rent"`
+	StartDate       time.Time         `json:"start_date"`
 	DatePay         time.Time         `json:"date_pay"`
 	PayMode         int               `json:"pay_mode"`
 	Payment         float64           `json:"payment"`
@@ -41,4 +44,8 @@ type ContractResponse struct {
 	Invoices        []Invoice         `json:"invoices"`
 	ServiceDemand   []ServiceDemand   `json:"service_demands"`
 	ServicesHistory []ServicesHistory `json:"services_history"`
+	Title           string            `json:"title"`
+	RentalDuration  int               `json:"rental_duration"`
+	Deposit         float64           `json:"deposit"`
+	CancelStatus    int               `json:"cancel_status"`
 }

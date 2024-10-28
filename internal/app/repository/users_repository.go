@@ -40,7 +40,7 @@ func (repo UserRepositoryImpl) GetAll() ([]*dao.UsersResponse, error) {
 
 func (repo UserRepositoryImpl) GetByID(id int) (*dao.UsersResponse, error) {
 	var user *dao.Users
-	err := repo.db.First(&user, id).Error
+	err := repo.db.Preload(clause.Associations).First(&user, id).Error
 
 	if err != nil {
 		return &dao.UsersResponse{}, err
@@ -71,7 +71,25 @@ func (repo UserRepositoryImpl) Create(user *dao.Users) (*dao.Users, error) {
 }
 
 func (repo UserRepositoryImpl) Update(user *dao.Users) (*dao.Users, error) {
-	err := repo.db.Save(&user).Error
+	db := repo.db.Model(&dao.Users{}).Where("id = ?", user.ID)
+
+	if user.FullName != "" {
+		db = db.Update("full_name", user.FullName)
+	}
+
+	if user.Email != "" {
+		db = db.Update("email", user.Email)
+	}
+
+	if user.ImgURL != "" {
+		db = db.Update("img_url", user.ImgURL)
+	}
+
+	if user.Phone != "" {
+		db = db.Update("phone", user.Phone)
+	}
+
+	err := db.Error
 
 	if err != nil {
 		return &dao.Users{}, err

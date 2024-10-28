@@ -93,7 +93,6 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			IsEnable:        contract.IsEnable,
 			FilePath:        contract.FilePath,
 			Invoices:        contract.Invoices,
-			ServiceDemand:   contract.ServiceDemands,
 			ServicesHistory: contract.ServicesHistory,
 		})
 	}
@@ -160,7 +159,6 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		IsEnable:        data.IsEnable,
 		FilePath:        data.FilePath,
 		Invoices:        data.Invoices,
-		ServiceDemand:   data.ServiceDemands,
 		ServicesHistory: data.ServicesHistory,
 	}
 

@@ -117,6 +117,15 @@ var transactionSvcSet = wire.NewSet(service.TransactionServiceInit,
 var transactionCtrlSet = wire.NewSet(controller.TransactionControllerInit,
 	wire.Bind(new(controller.TransactionController), new(*controller.TransactionControllerImpl)))
 
+var signatureRepoSet = wire.NewSet(repository.SignatureRepositoryInit,
+	wire.Bind(new(repository.SignatureRepository), new(*repository.SignatureRepositoryImpl)))
+
+var signatureSvcSet = wire.NewSet(service.SignatureServiceInit,
+	wire.Bind(new(service.SignatureService), new(*service.SignatureServiceImpl)))
+
+var signatureCtrlSet = wire.NewSet(controller.SignatureControllerInit,
+	wire.Bind(new(controller.SignatureController), new(*controller.SignatureControllerImpl)))
+
 func Init() *Initialize {
 	wire.Build(
 		db,
@@ -155,6 +164,9 @@ func Init() *Initialize {
 		transactionCtrlSet,
 		transactionSvcSet,
 		transactionRepoSet,
+		signatureCtrlSet,
+		signatureSvcSet,
+		signatureRepoSet,
 		NewInitialize)
 	return nil
 }
