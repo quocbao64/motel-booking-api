@@ -42,7 +42,6 @@ type ContractResponse struct {
 	IsEnable        bool              `json:"is_enable"`
 	FilePath        string            `json:"file_path"`
 	Invoices        []Invoice         `json:"invoices"`
-	ServiceDemand   []ServiceDemand   `json:"service_demands"`
 	ServicesHistory []ServicesHistory `json:"services_history"`
 	Title           string            `json:"title"`
 	RentalDuration  int               `json:"rental_duration"`

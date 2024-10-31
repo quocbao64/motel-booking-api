@@ -163,5 +163,6 @@ func userToUserResponse(user *dao.Users) *dao.UsersResponse {
 		RefreshToken:   user.RefreshToken,
 		IdentityNumber: user.IdentityNumber,
 		Password:       user.Password,
+		Balance:        user.Balance,
 	}
 }

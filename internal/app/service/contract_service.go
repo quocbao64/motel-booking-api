@@ -36,7 +36,7 @@ type ContractParams struct {
 	RenterID           int       `json:"renter_id"`
 	LessorID           int       `json:"lessor_id"`
 	RoomID             int       `json:"room_id"`
-	DateRent           time.Time `json:"date_rent"`
+	StartDate          time.Time `json:"start_date"`
 	DatePay            time.Time `json:"date_pay"`
 	PayMode            int       `json:"pay_mode"`
 	Payment            float64   `json:"payment"`
@@ -62,10 +62,12 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 	data, err := repo.contractRepo.GetAll(filter)
 
 	//contract := blockchain.InvokeChaincode()
-	//blockchain.GetAllAssets(contract)
+	//contracts, err := blockchain.GetAllContract(contract)
+	//
+	//fmt.Println(err)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
 	}
 
@@ -77,6 +79,11 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 		var canceledBy *dao.UsersResponse
 		if contract.CanceledBy != nil {
 			canceledBy, err = repo.userRepo.GetByID(int(*contract.CanceledBy))
+		}
+		invoices, err := repo.invoiceRepo.GetByContractID(int(contract.ID))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
 		}
 		contracts = append(contracts, dao.ContractResponse{
 			ID:              contract.ID,
@@ -92,7 +99,7 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			Status:          contract.Status,
 			IsEnable:        contract.IsEnable,
 			FilePath:        contract.FilePath,
-			Invoices:        contract.Invoices,
+			Invoices:        invoices,
 			ServicesHistory: contract.ServicesHistory,
 		})
 	}
@@ -144,6 +151,11 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 	if data.CanceledBy != nil {
 		canceledBy, err = repo.userRepo.GetByID(int(*data.CanceledBy))
 	}
+	invoices, err := repo.invoiceRepo.GetByContractID(int(data.ID))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
 	contract := dao.ContractResponse{
 		ID:              data.ID,
 		Renter:          *renter,
@@ -158,7 +170,7 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		Status:          data.Status,
 		IsEnable:        data.IsEnable,
 		FilePath:        data.FilePath,
-		Invoices:        data.Invoices,
+		Invoices:        invoices,
 		ServicesHistory: data.ServicesHistory,
 	}
 
@@ -184,7 +196,7 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		RenterID:       uint(contractDAO.RenterID),
 		LessorID:       uint(contractDAO.LessorID),
 		RoomID:         uint(contractDAO.RoomID),
-		StartDate:      contractDAO.DateRent,
+		StartDate:      contractDAO.StartDate,
 		DatePay:        contractDAO.DatePay,
 		PayMode:        contractDAO.PayMode,
 		Payment:        contractDAO.Payment,

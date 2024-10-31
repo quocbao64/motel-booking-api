@@ -15,6 +15,7 @@ type InvoiceRepository interface {
 	Create(service *dao.Invoice) (*dao.Invoice, error)
 	Update(service *dao.Invoice) (*dao.Invoice, error)
 	Delete(id int) error
+	GetByContractID(contractID int) ([]dao.Invoice, error)
 }
 
 type InvoiceRepositoryImpl struct {
@@ -34,7 +35,7 @@ func (repo InvoiceRepositoryImpl) GetAll() ([]*dao.Invoice, error) {
 
 func (repo InvoiceRepositoryImpl) GetByID(id int) (*dao.Invoice, error) {
 	var service *dao.Invoice
-	err := repo.db.First(&service, id).Error
+	err := repo.db.Preload(clause.Associations).First(&service, id).Error
 
 	if err != nil {
 		return &dao.Invoice{}, err
@@ -92,6 +93,17 @@ func (repo InvoiceRepositoryImpl) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (repo InvoiceRepositoryImpl) GetByContractID(contractID int) ([]dao.Invoice, error) {
+	var invoices []dao.Invoice
+	err := repo.db.Preload(clause.Associations).Where("contract_id = ?", contractID).Find(&invoices).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return invoices, nil
 }
 
 func InvoiceRepositoryInit(db *gorm.DB) *InvoiceRepositoryImpl {
