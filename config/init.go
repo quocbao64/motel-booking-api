@@ -45,6 +45,7 @@ type Initialize struct {
 	SignatureSvc       service.SignatureService
 	SignatureCtrl      controller.SignatureController
 	SignatureRepo      repository.SignatureRepository
+	BorrowedItemRepo   repository.BorrowedItemRepository
 }
 
 func NewInitialize(
@@ -86,6 +87,7 @@ func NewInitialize(
 	signatureCtrl controller.SignatureController,
 	signatureSvc service.SignatureService,
 	signatureRepo repository.SignatureRepository,
+	borrowedItemRepo repository.BorrowedItemRepository,
 ) *Initialize {
 	return &Initialize{
 		AuthCtrl:           authCtrl,
@@ -126,5 +128,6 @@ func NewInitialize(
 		SignatureCtrl:      signatureCtrl,
 		SignatureSvc:       signatureSvc,
 		SignatureRepo:      signatureRepo,
+		BorrowedItemRepo:   borrowedItemRepo,
 	}
 }

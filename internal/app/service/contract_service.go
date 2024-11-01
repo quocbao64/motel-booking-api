@@ -30,6 +30,7 @@ type ContractServiceImpl struct {
 	roomRepo            repository.RoomRepository
 	userRepo            repository.UserRepository
 	servicesHistoryRepo repository.ServicesHistoryRepository
+	borrowedItemRepo    repository.BorrowedItemRepository
 }
 
 type ContractParams struct {
@@ -48,6 +49,7 @@ type ContractParams struct {
 	IsRenterSigned     bool      `json:"is_renter_signed"`
 	IsLessorSigned     bool      `json:"is_lessor_signed"`
 	MonthlyPrice       float64   `json:"monthly_price"`
+	BorrowedItems      []int     `json:"borrowed_items"`
 }
 
 func (repo ContractServiceImpl) GetAll(c *gin.Context) {
@@ -101,6 +103,7 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			FilePath:        contract.FilePath,
 			Invoices:        invoices,
 			ServicesHistory: contract.ServicesHistory,
+			BorrowedItems:   contract.BorrowedItems,
 		})
 	}
 
@@ -172,6 +175,7 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		FilePath:        data.FilePath,
 		Invoices:        invoices,
 		ServicesHistory: data.ServicesHistory,
+		BorrowedItems:   data.BorrowedItems,
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
@@ -192,6 +196,15 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
+	filter := &repository.BorrowedItemFilter{
+		IDs: contractDAO.BorrowedItems,
+	}
+	borrowedItems, err := repo.borrowedItemRepo.GetAll(filter)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
 	contract := &dao.Contract{
 		RenterID:       uint(contractDAO.RenterID),
 		LessorID:       uint(contractDAO.LessorID),
@@ -206,6 +219,7 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		IsRenterSigned: contractDAO.IsRenterSigned,
 		IsLessorSigned: contractDAO.IsLessorSigned,
 		MonthlyPrice:   contractDAO.MonthlyPrice,
+		BorrowedItems:  borrowedItems,
 	}
 	data, err := repo.contractRepo.Create(contract)
 
@@ -312,7 +326,8 @@ func ContractServiceInit(
 	invoiceRepo repository.InvoiceRepository,
 	roomRepo repository.RoomRepository,
 	userRepo repository.UserRepository,
-	servicesHistoryRepo repository.ServicesHistoryRepository) *ContractServiceImpl {
+	servicesHistoryRepo repository.ServicesHistoryRepository,
+	borrowedItemRepo repository.BorrowedItemRepository) *ContractServiceImpl {
 	return &ContractServiceImpl{
 		contractRepo:        repo,
 		hashContractRepo:    hashContractRepo,
@@ -321,5 +336,6 @@ func ContractServiceInit(
 		roomRepo:            roomRepo,
 		userRepo:            userRepo,
 		servicesHistoryRepo: servicesHistoryRepo,
+		borrowedItemRepo:    borrowedItemRepo,
 	}
 }

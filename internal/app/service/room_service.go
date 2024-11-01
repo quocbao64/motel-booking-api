@@ -20,8 +20,9 @@ type RoomService interface {
 }
 
 type RoomServiceImpl struct {
-	roomRepo    repository.RoomRepository
-	addressRepo repository.AddressRepository
+	roomRepo         repository.RoomRepository
+	addressRepo      repository.AddressRepository
+	borrowedItemRepo repository.BorrowedItemRepository
 }
 
 type RoomParams struct {
@@ -137,6 +138,17 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		}
 	}
 
+	if roomReq.BorrowedItems != nil {
+		for _, borrowedItem := range roomReq.BorrowedItems {
+			borrowedItem.RoomID = data.ID
+			_, err := repo.borrowedItemRepo.Create(&borrowedItem)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+				return
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
@@ -168,9 +180,12 @@ func (repo RoomServiceImpl) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), pkg.Null()))
 }
 
-func RoomServiceInit(roomRepo repository.RoomRepository, addressRepo repository.AddressRepository) *RoomServiceImpl {
+func RoomServiceInit(roomRepo repository.RoomRepository,
+	addressRepo repository.AddressRepository,
+	borrowedItemRepo repository.BorrowedItemRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
-		roomRepo:    roomRepo,
-		addressRepo: addressRepo,
+		roomRepo:         roomRepo,
+		addressRepo:      addressRepo,
+		borrowedItemRepo: borrowedItemRepo,
 	}
 }

@@ -91,6 +91,9 @@ const docTemplate = `{
                 "address": {
                     "$ref": "#/definitions/dao.AddressResponse"
                 },
+                "balance": {
+                    "type": "number"
+                },
                 "email": {
                     "type": "string"
                 },

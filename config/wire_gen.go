@@ -24,7 +24,8 @@ func Init() *Initialize {
 	userServiceImpl := service.UserServiceInit(userRepositoryImpl, addressRepositoryImpl)
 	userControllerImpl := controller.UserControllerInit(userServiceImpl)
 	roomRepositoryImpl := repository.RoomRepositoryInit(gormDB)
-	roomServiceImpl := service.RoomServiceInit(roomRepositoryImpl, addressRepositoryImpl)
+	borrowedItemRepositoryImpl := repository.BorrowedItemRepositoryInit(gormDB)
+	roomServiceImpl := service.RoomServiceInit(roomRepositoryImpl, addressRepositoryImpl, borrowedItemRepositoryImpl)
 	roomControllerImpl := controller.RoomControllerInit(roomServiceImpl)
 	geographyRepositoryImpl := repository.GeographyRepositoryInit(gormDB)
 	geographyServiceImpl := service.GeographyServiceInit(geographyRepositoryImpl)
@@ -40,7 +41,7 @@ func Init() *Initialize {
 	servicesDemandRepositoryImpl := repository.ServicesDemandRepositoryInit(gormDB)
 	invoiceRepositoryImpl := repository.InvoiceRepositoryInit(gormDB)
 	servicesHistoryRepositoryImpl := repository.ServicesHistoryRepositoryInit(gormDB)
-	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl, servicesHistoryRepositoryImpl)
+	contractServiceImpl := service.ContractServiceInit(contractRepositoryImpl, hashContractRepositoryImpl, servicesDemandRepositoryImpl, invoiceRepositoryImpl, roomRepositoryImpl, userRepositoryImpl, servicesHistoryRepositoryImpl, borrowedItemRepositoryImpl)
 	contractControllerImpl := controller.ContractControllerInit(contractServiceImpl)
 	transactionRepositoryImpl := repository.TransactionRepositoryInit(gormDB)
 	invoiceServiceImpl := service.InvoiceServiceInit(invoiceRepositoryImpl, servicesDemandRepositoryImpl, transactionRepositoryImpl)
@@ -48,14 +49,14 @@ func Init() *Initialize {
 	servicesDemandServiceImpl := service.ServicesDemandServiceInit(servicesDemandRepositoryImpl)
 	servicesDemandControllerImpl := controller.ServicesDemandControllerInit(servicesDemandServiceImpl)
 	bookingRequestRepositoryImpl := repository.BookingRequestRepositoryInit(gormDB)
-	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl)
+	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl, borrowedItemRepositoryImpl)
 	bookingRequestControllerImpl := controller.BookingRequestControllerInit(bookingRequestServiceImpl)
 	transactionServiceImpl := service.TransactionServiceInit(transactionRepositoryImpl)
 	transactionControllerImpl := controller.TransactionControllerInit(transactionServiceImpl)
 	signatureRepositoryImpl := repository.SignatureRepositoryInit(gormDB)
 	signatureServiceImpl := service.SignatureServiceInit(signatureRepositoryImpl)
 	signatureControllerImpl := controller.SignatureControllerInit(signatureServiceImpl)
-	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl, transactionControllerImpl, transactionServiceImpl, transactionRepositoryImpl, signatureControllerImpl, signatureServiceImpl, signatureRepositoryImpl)
+	initialize := NewInitialize(authControllerImpl, authServiceImpl, userControllerImpl, userServiceImpl, userRepositoryImpl, roomControllerImpl, roomServiceImpl, roomRepositoryImpl, geographyRepositoryImpl, geographyControllerImpl, geographyServiceImpl, addressControllerImpl, addressServiceImpl, addressRepositoryImpl, serviceRepositoryImpl, servicesControllerImpl, servicesServiceImpl, hashContractServiceImpl, hashContractRepositoryImpl, contractControllerImpl, contractServiceImpl, contractRepositoryImpl, invoiceControllerImpl, invoiceServiceImpl, invoiceRepositoryImpl, servicesDemandControllerImpl, servicesDemandServiceImpl, servicesDemandRepositoryImpl, bookingRequestControllerImpl, bookingRequestServiceImpl, bookingRequestRepositoryImpl, servicesHistoryRepositoryImpl, transactionControllerImpl, transactionServiceImpl, transactionRepositoryImpl, signatureControllerImpl, signatureServiceImpl, signatureRepositoryImpl, borrowedItemRepositoryImpl)
 	return initialize
 }
 
@@ -138,3 +139,5 @@ var signatureRepoSet = wire.NewSet(repository.SignatureRepositoryInit, wire.Bind
 var signatureSvcSet = wire.NewSet(service.SignatureServiceInit, wire.Bind(new(service.SignatureService), new(*service.SignatureServiceImpl)))
 
 var signatureCtrlSet = wire.NewSet(controller.SignatureControllerInit, wire.Bind(new(controller.SignatureController), new(*controller.SignatureControllerImpl)))
+
+var borrowedItemRepoSet = wire.NewSet(repository.BorrowedItemRepositoryInit, wire.Bind(new(repository.BorrowedItemRepository), new(*repository.BorrowedItemRepositoryImpl)))

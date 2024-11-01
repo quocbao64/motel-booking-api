@@ -126,5 +126,6 @@ func roomToRoomResponse(room *dao.Room, addressID uint) *dao.RoomResponse {
 		Services:      room.Services,
 		Images:        room.Images,
 		AddressID:     addressID,
+		BorrowedItems: room.BorrowedItems,
 	}
 }

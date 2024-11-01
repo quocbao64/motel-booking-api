@@ -17,6 +17,8 @@ definitions:
     properties:
       address:
         $ref: '#/definitions/dao.AddressResponse'
+      balance:
+        type: number
       email:
         type: string
       full_name:

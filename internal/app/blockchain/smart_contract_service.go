@@ -19,8 +19,8 @@ import (
 const (
 	mspID        = "Org1MSP"
 	cryptoPath   = "internal/app/blockchain/organizations/peerOrganizations/org1.example.com"
-	certPath     = cryptoPath + "/users/User1@org1.example.com/msp/signcerts"
-	keyPath      = cryptoPath + "/users/User1@org1.example.com/msp/keystore"
+	certPath     = cryptoPath + "/users/Admin@org1.example.com/msp/signcerts"
+	keyPath      = cryptoPath + "/users/Admin@org1.example.com/msp/keystore"
 	tlsCertPath  = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
 	peerEndpoint = "dns:///localhost:7051"
 	gatewayPeer  = "peer0.org1.example.com"
@@ -136,16 +136,55 @@ func readFirstFile(dirPath string) ([]byte, error) {
 	return os.ReadFile(path.Join(dirPath, fileNames[0]))
 }
 
-func GetAllAssets(contract *client.Contract) {
+func GetAllContract(contract *client.Contract) ([]*dao.Contract, error) {
 	fmt.Println("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
+	var contracts []*dao.Contract
 
-	evaluateResult, err := contract.EvaluateTransaction("ReadAll")
+	evaluateResult, err := contract.EvaluateTransaction("ReadAllContract")
 	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+		panic(fmt.Errorf("Failed to evaluate transaction: %w", err))
 	}
-	result := formatJSON(evaluateResult)
 
-	fmt.Printf("*** Result:%s\n", result)
+	if len(evaluateResult) == 0 {
+		return contracts, nil
+	}
+
+	var result []map[string]interface{}
+	if err := json.Unmarshal(evaluateResult, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	for _, item := range result {
+
+		idresp, _ := strconv.Atoi(item["id"].(string))
+		roomID, _ := strconv.Atoi(item["room_id"].(string))
+		lessorID, _ := strconv.Atoi(item["lessor_id"].(string))
+		renterID, _ := strconv.Atoi(item["renter_id"].(string))
+		status, _ := strconv.Atoi(item["status"].(string))
+		payMode, _ := strconv.Atoi(item["pay_mode"].(string))
+		payment, _ := strconv.ParseFloat(item["payment"].(string), 64)
+		startDate, _ := time.Parse("2006-01-02", item["start_date"].(string))
+		datePay, _ := time.Parse("2006-01-02", item["date_pay"].(string))
+
+		contract := &dao.Contract{
+			BaseModel: dao.BaseModel{
+				ID: uint(idresp),
+			},
+			RoomID:    uint(roomID),
+			LessorID:  uint(lessorID),
+			RenterID:  uint(renterID),
+			Status:    status,
+			PayMode:   payMode,
+			StartDate: startDate,
+			DatePay:   datePay,
+			Payment:   payment,
+			IsEnable:  item["is_enable"].(bool),
+		}
+
+		contracts = append(contracts, contract)
+	}
+
+	return contracts, nil
 }
 
 func CreateAssets(contract *client.Contract, contractDAO *dao.Contract) error {

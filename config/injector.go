@@ -126,6 +126,9 @@ var signatureSvcSet = wire.NewSet(service.SignatureServiceInit,
 var signatureCtrlSet = wire.NewSet(controller.SignatureControllerInit,
 	wire.Bind(new(controller.SignatureController), new(*controller.SignatureControllerImpl)))
 
+var borrowedItemRepoSet = wire.NewSet(repository.BorrowedItemRepositoryInit,
+	wire.Bind(new(repository.BorrowedItemRepository), new(*repository.BorrowedItemRepositoryImpl)))
+
 func Init() *Initialize {
 	wire.Build(
 		db,
@@ -167,6 +170,7 @@ func Init() *Initialize {
 		signatureCtrlSet,
 		signatureSvcSet,
 		signatureRepoSet,
+		borrowedItemRepoSet,
 		NewInitialize)
 	return nil
 }

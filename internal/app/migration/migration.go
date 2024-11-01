@@ -22,7 +22,8 @@ func Migrate(db *gorm.DB) {
 		&dao.BookingRequest{},
 		&dao.ServicesHistory{},
 		&dao.Transaction{},
-		&dao.Signature{})
+		&dao.Signature{},
+		&dao.BorrowedItem{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 		return

@@ -15,6 +15,7 @@ type Room struct {
 	Services        []Service        `gorm:"many2many:room_services" json:"services"`
 	Images          []string         `gorm:"images;serializer:json" json:"images"`
 	BookingRequests []BookingRequest `gorm:"foreignKey:RoomID" json:"booking_requests"`
+	BorrowedItems   []BorrowedItem   `gorm:"foreignKey:RoomID" json:"borrowed_items"`
 }
 
 type Image struct {
@@ -23,18 +24,19 @@ type Image struct {
 }
 
 type RoomRequest struct {
-	Title         string  `json:"title"`
-	Acreage       int     `json:"acreage"`
-	Price         float64 `json:"price"`
-	Description   string  `json:"description"`
-	DateSubmitted string  `json:"date_submitted"`
-	OwnerID       uint    `json:"owner_id"`
-	MaxPeople     int     `json:"max_people"`
-	RoomType      int     `json:"room_type"`
-	Deposit       float64 `json:"deposit"`
-	Services      []int   `json:"services"`
-	Images        []Image `json:"images"`
-	AddressID     uint    `json:"address_id"`
+	Title         string         `json:"title"`
+	Acreage       int            `json:"acreage"`
+	Price         float64        `json:"price"`
+	Description   string         `json:"description"`
+	DateSubmitted string         `json:"date_submitted"`
+	OwnerID       uint           `json:"owner_id"`
+	MaxPeople     int            `json:"max_people"`
+	RoomType      int            `json:"room_type"`
+	Deposit       float64        `json:"deposit"`
+	Services      []int          `json:"services"`
+	Images        []Image        `json:"images"`
+	AddressID     uint           `json:"address_id"`
+	BorrowedItems []BorrowedItem `json:"borrowed_items"`
 }
 
 type RoomResponse struct {
@@ -52,6 +54,7 @@ type RoomResponse struct {
 	Deposit       float64         `json:"deposit"`
 	Services      []Service       `json:"services"`
 	Images        []string        `json:"images"`
+	BorrowedItems []BorrowedItem  `json:"borrowed_items"`
 }
 
 type RoomService struct {

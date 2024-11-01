@@ -25,6 +25,7 @@ type Contract struct {
 	RentalDuration  int               `gorm:"rental_duration" json:"rental_duration"`
 	Deposit         float64           `gorm:"deposit" json:"deposit"`
 	CancelStatus    int               `gorm:"cancel_status" json:"cancel_status"`
+	BorrowedItems   []BorrowedItem    `gorm:"borrowed_items" json:"borrowed_items"`
 }
 
 type ContractResponse struct {
@@ -47,4 +48,5 @@ type ContractResponse struct {
 	RentalDuration  int               `json:"rental_duration"`
 	Deposit         float64           `json:"deposit"`
 	CancelStatus    int               `json:"cancel_status"`
+	BorrowedItems   []BorrowedItem    `json:"borrowed_items"`
 }
