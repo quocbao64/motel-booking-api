@@ -52,6 +52,7 @@ type ContractParams struct {
 	IsLessorSigned     bool      `json:"is_lessor_signed"`
 	MonthlyPrice       float64   `json:"monthly_price"`
 	BorrowedItems      []int     `json:"borrowed_items"`
+	Deposit            float64   `json:"deposit"`
 }
 
 type LiquidityParams struct {
@@ -231,6 +232,7 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		IsLessorSigned: contractDAO.IsLessorSigned,
 		MonthlyPrice:   contractDAO.MonthlyPrice,
 		BorrowedItems:  borrowedItems,
+		Deposit:        contractDAO.Deposit,
 	}
 	data, err := repo.contractRepo.Create(contract)
 
