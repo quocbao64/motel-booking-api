@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"awesomeProject/internal/app/constant"
 	"awesomeProject/internal/app/domain/dao"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +18,7 @@ type ContractRepository interface {
 	Create(service *dao.Contract) (*dao.Contract, error)
 	Update(service *dao.Contract) (*dao.Contract, error)
 	Delete(id int) error
+	UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction, damagedItems []*dao.BorrowedItem) (*dao.Contract, error)
 }
 
 type ContractRepositoryImpl struct {
@@ -83,6 +85,42 @@ func (repo ContractRepositoryImpl) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (repo ContractRepositoryImpl) UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction, damagedItems []*dao.BorrowedItem) (*dao.Contract, error) {
+	err := repo.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Save(lessorTrans).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Save(renterTrans).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(&dao.Contract{}).Where("id = ?", contractID).Updates(map[string]interface{}{
+			"status": constant.CONTRACT_FINISHED,
+		}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return &dao.Contract{}, err
+	}
+
+	var contract *dao.Contract
+	err = repo.db.Preload(clause.Associations).First(&contract, contractID).Error
+
+	if err != nil {
+		return &dao.Contract{}, nil
+	}
+
+	return contract, nil
 }
 
 func ContractRepositoryInit(db *gorm.DB) *ContractRepositoryImpl {

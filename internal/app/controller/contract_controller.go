@@ -11,6 +11,7 @@ type ContractController interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	Liquidity(c *gin.Context)
 }
 
 type ContractControllerImpl struct {
@@ -35,6 +36,10 @@ func (controller ContractControllerImpl) Update(c *gin.Context) {
 
 func (controller ContractControllerImpl) Delete(c *gin.Context) {
 	controller.contractService.Delete(c)
+}
+
+func (controller ContractControllerImpl) Liquidity(c *gin.Context) {
+	controller.contractService.Liquidity(c)
 }
 
 func ContractControllerInit(contractService service.ContractService) *ContractControllerImpl {

@@ -20,6 +20,7 @@ type ContractService interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	Liquidity(c *gin.Context)
 }
 
 type ContractServiceImpl struct {
@@ -31,6 +32,7 @@ type ContractServiceImpl struct {
 	userRepo            repository.UserRepository
 	servicesHistoryRepo repository.ServicesHistoryRepository
 	borrowedItemRepo    repository.BorrowedItemRepository
+	transactionRepo     repository.TransactionRepository
 }
 
 type ContractParams struct {
@@ -50,6 +52,11 @@ type ContractParams struct {
 	IsLessorSigned     bool      `json:"is_lessor_signed"`
 	MonthlyPrice       float64   `json:"monthly_price"`
 	BorrowedItems      []int     `json:"borrowed_items"`
+}
+
+type LiquidityParams struct {
+	ContractID    int    `json:"contract_id"`
+	BorrowedItems []uint `json:"borrowed_items"`
 }
 
 func (repo ContractServiceImpl) GetAll(c *gin.Context) {
@@ -104,6 +111,8 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			Invoices:        invoices,
 			ServicesHistory: contract.ServicesHistory,
 			BorrowedItems:   contract.BorrowedItems,
+			Deposit:         contract.Deposit,
+			DamagedItems:    contract.DamagedItems,
 		})
 	}
 
@@ -176,6 +185,8 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		Invoices:        invoices,
 		ServicesHistory: data.ServicesHistory,
 		BorrowedItems:   data.BorrowedItems,
+		Deposit:         data.Deposit,
+		DamagedItems:    data.DamagedItems,
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
@@ -319,6 +330,71 @@ func (repo ContractServiceImpl) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), pkg.Null()))
 }
 
+func (repo ContractServiceImpl) Liquidity(c *gin.Context) {
+	params := &LiquidityParams{}
+	err := c.BindJSON(&params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	contract, err := repo.contractRepo.GetByID(params.ContractID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	var refund float64
+	var damagedItems []*dao.BorrowedItem
+	for _, borrowedItemID := range params.BorrowedItems {
+		for _, borrowedItem := range contract.BorrowedItems {
+			if borrowedItem.ID == borrowedItemID {
+				refund += borrowedItem.Price
+				damagedItems = append(damagedItems, &borrowedItem)
+			}
+		}
+	}
+
+	lessorTrans := &dao.Transaction{
+		UserID:          contract.LessorID,
+		TransactionType: constant.TRANSACTION_REFUND,
+		Amount:          contract.Deposit + refund,
+		Status:          constant.TRANSACTION_SUCCESS,
+		TransactionNo:   uuid.New().String(),
+	}
+
+	renterTrans := &dao.Transaction{
+		UserID:          contract.RenterID,
+		TransactionType: constant.TRANSACTION_REFUND,
+		Amount:          contract.Deposit - refund,
+		Status:          constant.TRANSACTION_SUCCESS,
+		TransactionNo:   uuid.New().String(),
+	}
+
+	lessorTransCreated, err := repo.transactionRepo.Create(lessorTrans)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	renterTransCreated, err := repo.transactionRepo.Create(renterTrans)
+	if err != nil {
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	resp, err := repo.contractRepo.UpdateLiquidity(contract.ID, lessorTrans, renterTrans, damagedItems)
+
+	if err != nil {
+		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), resp))
+}
+
 func ContractServiceInit(
 	repo repository.ContractRepository,
 	hashContractRepo repository.HashContractRepository,
@@ -327,7 +403,8 @@ func ContractServiceInit(
 	roomRepo repository.RoomRepository,
 	userRepo repository.UserRepository,
 	servicesHistoryRepo repository.ServicesHistoryRepository,
-	borrowedItemRepo repository.BorrowedItemRepository) *ContractServiceImpl {
+	borrowedItemRepo repository.BorrowedItemRepository,
+	transactionRepo repository.TransactionRepository) *ContractServiceImpl {
 	return &ContractServiceImpl{
 		contractRepo:        repo,
 		hashContractRepo:    hashContractRepo,
@@ -337,5 +414,6 @@ func ContractServiceInit(
 		userRepo:            userRepo,
 		servicesHistoryRepo: servicesHistoryRepo,
 		borrowedItemRepo:    borrowedItemRepo,
+		transactionRepo:     transactionRepo,
 	}
 }
