@@ -24,7 +24,7 @@ type UserRepositoryImpl struct {
 
 func (repo UserRepositoryImpl) GetAll() ([]*dao.UsersResponse, error) {
 	var users []*dao.Users
-	err := repo.db.Find(users).Error
+	err := repo.db.Preload(clause.Associations).Find(&users).Error
 
 	if err != nil {
 		return nil, err
