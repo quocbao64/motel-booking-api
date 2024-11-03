@@ -2,9 +2,11 @@ package main
 
 import (
 	"awesomeProject/config"
+	"awesomeProject/internal/app/common"
 	"awesomeProject/internal/app/migration"
 	"awesomeProject/internal/app/routes"
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"os"
 )
@@ -41,7 +43,12 @@ func main() {
 
 	init := config.Init()
 	app := routes.Route(init)
-	err := app.Run(":" + port)
+	err := StartScheduler()
+	if err != nil {
+		return
+	}
+
+	err = app.Run(":" + port)
 	if err != nil {
 		return
 	}
@@ -58,4 +65,15 @@ func init() {
 func migrationDB(db *gorm.DB) {
 	defer config.CloseDB(db)
 	migration.Migrate(db)
+}
+
+func StartScheduler() error {
+	c := cron.New()
+	init := config.Init()
+	_, err := c.AddFunc("0 0 * * *", func() { common.CheckExpiredContracts(init) })
+	if err != nil {
+		return err
+	}
+	c.Start()
+	return nil
 }

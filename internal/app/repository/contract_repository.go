@@ -29,12 +29,14 @@ func (repo ContractRepositoryImpl) GetAll(filter *ContractFilter) ([]*dao.Contra
 	var services []*dao.Contract
 	db := repo.db
 
-	if filter.RenterID != 0 {
-		db = db.Where("renter_id = ?", filter.RenterID)
-	}
+	if filter != nil {
+		if filter.RenterID != 0 {
+			db = db.Where("renter_id = ?", filter.RenterID)
+		}
 
-	if filter.LessorID != 0 {
-		db = db.Where("lessor_id = ?", filter.LessorID)
+		if filter.LessorID != 0 {
+			db = db.Where("lessor_id = ?", filter.LessorID)
+		}
 	}
 
 	err := db.Preload(clause.Associations).Find(&services).Error
