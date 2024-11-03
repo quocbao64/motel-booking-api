@@ -16,6 +16,9 @@ type BorrowedItemRepository interface {
 	Create(service *dao.BorrowedItem) (*dao.BorrowedItem, error)
 	Update(service *dao.BorrowedItem) (*dao.BorrowedItem, error)
 	Delete(id int) error
+	CreateDamagedItems(items []*dao.DamagedItem) error
+	GetAllDamagedItems(contractID uint) ([]dao.DamagedItem, error)
+	DeleteDamagedItems(contractID uint) error
 }
 
 type BorrowedItemRepositoryImpl struct {
@@ -72,6 +75,37 @@ func (repo BorrowedItemRepositoryImpl) Update(service *dao.BorrowedItem) (*dao.B
 
 func (repo BorrowedItemRepositoryImpl) Delete(id int) error {
 	err := repo.db.Delete(&dao.BorrowedItem{}, id).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo BorrowedItemRepositoryImpl) CreateDamagedItems(items []*dao.DamagedItem) error {
+	err := repo.db.Save(items).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo BorrowedItemRepositoryImpl) GetAllDamagedItems(contractID uint) ([]dao.DamagedItem, error) {
+	var items []dao.DamagedItem
+	err := repo.db.Where("contract_id = ?", contractID).Find(&items).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func (repo BorrowedItemRepositoryImpl) DeleteDamagedItems(contractID uint) error {
+	err := repo.db.Where("contract_id = ?", contractID).Delete(&dao.DamagedItem{}).Error
 
 	if err != nil {
 		return err

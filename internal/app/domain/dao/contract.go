@@ -26,7 +26,7 @@ type Contract struct {
 	Deposit         float64           `gorm:"deposit" json:"deposit"`
 	CancelStatus    int               `gorm:"cancel_status" json:"cancel_status"`
 	BorrowedItems   []BorrowedItem    `gorm:"borrowed_items" json:"borrowed_items"`
-	DamagedItems    []BorrowedItem    `gorm:"damaged_items" json:"damaged_items"`
+	DamagedItems    []DamagedItem     `gorm:"damaged_items" json:"damaged_items"`
 }
 
 type ContractResponse struct {
@@ -50,5 +50,5 @@ type ContractResponse struct {
 	Deposit         float64           `json:"deposit"`
 	CancelStatus    int               `json:"cancel_status"`
 	BorrowedItems   []BorrowedItem    `json:"borrowed_items"`
-	DamagedItems    []BorrowedItem    `json:"damaged_items"`
+	DamagedItems    []DamagedItem     `json:"damaged_items"`
 }

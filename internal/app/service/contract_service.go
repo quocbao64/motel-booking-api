@@ -347,12 +347,22 @@ func (repo ContractServiceImpl) Liquidity(c *gin.Context) {
 	}
 
 	var refund float64
-	var damagedItems []*dao.BorrowedItem
+	var damagedItems []*dao.DamagedItem
 	for _, borrowedItemID := range params.BorrowedItems {
 		for _, borrowedItem := range contract.BorrowedItems {
 			if borrowedItem.ID == borrowedItemID {
 				refund += borrowedItem.Price
-				damagedItems = append(damagedItems, &borrowedItem)
+				damagedItem := &dao.DamagedItem{
+					BaseModel: dao.BaseModel{
+						ID: borrowedItemID,
+					},
+					ContractID:       borrowedItem.ContractID,
+					Name:             borrowedItem.Name,
+					Price:            borrowedItem.Price,
+					RoomID:           borrowedItem.RoomID,
+					BookingRequestID: borrowedItem.BookingRequestID,
+				}
+				damagedItems = append(damagedItems, damagedItem)
 			}
 		}
 	}
@@ -386,10 +396,21 @@ func (repo ContractServiceImpl) Liquidity(c *gin.Context) {
 		return
 	}
 
-	resp, err := repo.contractRepo.UpdateLiquidity(contract.ID, lessorTrans, renterTrans, damagedItems)
+	err = repo.borrowedItemRepo.CreateDamagedItems(damagedItems)
 
 	if err != nil {
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
 		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	resp, err := repo.contractRepo.UpdateLiquidity(contract.ID, lessorTrans, renterTrans)
+
+	if err != nil {
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		_ = repo.borrowedItemRepo.Delete(int(contract.ID))
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
 	}

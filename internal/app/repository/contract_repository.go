@@ -18,7 +18,7 @@ type ContractRepository interface {
 	Create(service *dao.Contract) (*dao.Contract, error)
 	Update(service *dao.Contract) (*dao.Contract, error)
 	Delete(id int) error
-	UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction, damagedItems []*dao.BorrowedItem) (*dao.Contract, error)
+	UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction) (*dao.Contract, error)
 }
 
 type ContractRepositoryImpl struct {
@@ -87,7 +87,7 @@ func (repo ContractRepositoryImpl) Delete(id int) error {
 	return nil
 }
 
-func (repo ContractRepositoryImpl) UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction, damagedItems []*dao.BorrowedItem) (*dao.Contract, error) {
+func (repo ContractRepositoryImpl) UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction) (*dao.Contract, error) {
 	err := repo.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Save(lessorTrans).Error
 		if err != nil {
@@ -100,7 +100,7 @@ func (repo ContractRepositoryImpl) UpdateLiquidity(contractID uint, lessorTrans 
 		}
 
 		err = tx.Model(&dao.Contract{}).Where("id = ?", contractID).Updates(map[string]interface{}{
-			"status": constant.CONTRACT_FINISHED,
+			"status": constant.LIQUIDITY_COMPLETED,
 		}).Error
 		if err != nil {
 			return err
