@@ -164,5 +164,6 @@ func userToUserResponse(user *dao.Users) *dao.UsersResponse {
 		IdentityNumber: user.IdentityNumber,
 		Password:       user.Password,
 		Balance:        user.Balance,
+		Signature:      user.Signature,
 	}
 }

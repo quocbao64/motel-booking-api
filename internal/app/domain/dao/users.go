@@ -11,22 +11,24 @@ type Users struct {
 	RefreshToken    string        `gorm:"refresh_token" json:"-"`
 	IdentityNumber  string        `gorm:"identity_number" json:"identity_number"`
 	Balance         float64       `gorm:"balance" json:"balance"`
-	Address         Address       `gorm:"polymorphic:Addressable;polymorphicValue:User" json:"address"`
+	Address         *Address      `gorm:"polymorphic:Addressable;polymorphicValue:User" json:"address"`
 	RenterContracts []Contract    `gorm:"foreignKey:RenterID" json:"renter_contracts"`
 	LessorContracts []Contract    `gorm:"foreignKey:LessorID" json:"lessor_contracts"`
 	Transactions    []Transaction `gorm:"foreignKey:UserID" json:"transactions"`
+	Signature       *Signature    `gorm:"foreignKey:UserID" json:"signature"`
 }
 
 type UsersResponse struct {
-	ID             uint            `json:"id"`
-	FullName       string          `json:"full_name"`
-	Email          string          `json:"email"`
-	ImgURL         string          `json:"img_url"`
-	Phone          string          `json:"phone"`
-	Role           string          `json:"role"`
-	RefreshToken   string          `json:"refresh_token"`
-	IdentityNumber string          `json:"identity_number"`
-	Address        AddressResponse `json:"address"`
-	Password       string          `json:"-"`
-	Balance        float64         `json:"balance"`
+	ID             uint             `json:"id"`
+	FullName       string           `json:"full_name"`
+	Email          string           `json:"email"`
+	ImgURL         string           `json:"img_url"`
+	Phone          string           `json:"phone"`
+	Role           string           `json:"role"`
+	RefreshToken   string           `json:"refresh_token"`
+	IdentityNumber string           `json:"identity_number"`
+	Address        *AddressResponse `json:"address"`
+	Password       string           `json:"-"`
+	Balance        float64          `json:"balance"`
+	Signature      *Signature       `json:"signature"`
 }
