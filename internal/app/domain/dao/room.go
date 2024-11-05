@@ -33,9 +33,10 @@ type RoomRequest struct {
 	MaxPeople     int            `json:"max_people"`
 	RoomType      int            `json:"room_type"`
 	Deposit       float64        `json:"deposit"`
-	Services      []int          `json:"services"`
+	Services      []Service      `json:"services"`
 	Images        []Image        `json:"images"`
-	AddressID     uint           `json:"address_id"`
+	WardID        uint           `json:"ward_id"`
+	AddressDetail string         `json:"address_detail"`
 	BorrowedItems []BorrowedItem `json:"borrowed_items"`
 }
 

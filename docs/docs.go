@@ -85,6 +85,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dao.Signature": {
+            "type": "object",
+            "properties": {
+                "cccd_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "service_type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dao.UsersResponse": {
             "type": "object",
             "properties": {
@@ -117,6 +143,21 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "signature": {
+                    "$ref": "#/definitions/dao.Signature"
+                }
+            }
+        },
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
                 }
             }
         },

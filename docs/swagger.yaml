@@ -13,6 +13,23 @@ definitions:
       ward_name:
         type: string
     type: object
+  dao.Signature:
+    properties:
+      cccd_number:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      service_type:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
   dao.UsersResponse:
     properties:
       address:
@@ -35,6 +52,16 @@ definitions:
         type: string
       role:
         type: string
+      signature:
+        $ref: '#/definitions/dao.Signature'
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
     type: object
   service.LoginResponse:
     properties:

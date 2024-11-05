@@ -23,6 +23,7 @@ type RoomServiceImpl struct {
 	roomRepo         repository.RoomRepository
 	addressRepo      repository.AddressRepository
 	borrowedItemRepo repository.BorrowedItemRepository
+	serviceRepo      repository.ServiceRepository
 }
 
 type RoomParams struct {
@@ -101,7 +102,10 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		}
 	}
 
-	address, err := repo.addressRepo.GetByID(roomReq.AddressID)
+	address, err := repo.addressRepo.Create(&dao.Address{
+		WardID: roomReq.WardID,
+		Detail: roomReq.AddressDetail,
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
@@ -130,7 +134,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 
 	if roomReq.Services != nil {
 		for _, service := range roomReq.Services {
-			err := repo.roomRepo.CreateRoomService(data.ID, uint(service))
+			_, err := repo.serviceRepo.Create(&service)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 				return
@@ -182,10 +186,12 @@ func (repo RoomServiceImpl) Delete(c *gin.Context) {
 
 func RoomServiceInit(roomRepo repository.RoomRepository,
 	addressRepo repository.AddressRepository,
-	borrowedItemRepo repository.BorrowedItemRepository) *RoomServiceImpl {
+	borrowedItemRepo repository.BorrowedItemRepository,
+	serviceRepo repository.ServiceRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
 		roomRepo:         roomRepo,
 		addressRepo:      addressRepo,
 		borrowedItemRepo: borrowedItemRepo,
+		serviceRepo:      serviceRepo,
 	}
 }
