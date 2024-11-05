@@ -139,6 +139,12 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 				return
 			}
+
+			err = repo.roomRepo.CreateRoomService(data.ID, service.ID)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+				return
+			}
 		}
 	}
 
