@@ -10,6 +10,7 @@ import (
 
 type StatisticService interface {
 	StatisticUser(c *gin.Context)
+	StatisticRoom(c *gin.Context)
 }
 
 type StatisticServiceImpl struct {
@@ -18,6 +19,17 @@ type StatisticServiceImpl struct {
 
 func (repo StatisticServiceImpl) StatisticUser(c *gin.Context) {
 	data, err := repo.statisticRepo.StatisticUser()
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
+func (repo StatisticServiceImpl) StatisticRoom(c *gin.Context) {
+	data, err := repo.statisticRepo.StatisticRoom()
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))

@@ -53,6 +53,8 @@ type ContractParams struct {
 	MonthlyPrice       float64   `json:"monthly_price"`
 	BorrowedItems      []int     `json:"borrowed_items"`
 	Deposit            float64   `json:"deposit"`
+	RentalDuration     int       `json:"rental_duration"`
+	Title              string    `json:"title"`
 }
 
 type LiquidityParams struct {
@@ -233,6 +235,8 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		MonthlyPrice:   contractDAO.MonthlyPrice,
 		BorrowedItems:  borrowedItems,
 		Deposit:        contractDAO.Deposit,
+		RentalDuration: contractDAO.RentalDuration,
+		Title:          contractDAO.Title,
 	}
 	data, err := repo.contractRepo.Create(contract)
 
