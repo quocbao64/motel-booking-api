@@ -25,3 +25,12 @@ type RoomStatistic struct {
 	CountOfRenewal        int       `json:"count_of_renewal"`
 	CreatedAt             time.Time `json:"created_at"`
 }
+
+type Statistic struct {
+	CountOfUserUsedByMonth       int `json:"count_of_user_used_by_month"`
+	CountOfUserUsedByYear        int `json:"count_of_user_used_by_year"`
+	CountOfContractByMonth       int `json:"count_of_contract_by_month"`
+	CountOfContractByYear        int `json:"count_of_contract_by_year"`
+	CountOfBookingRequestByMonth int `json:"count_of_booking_request_by_month"`
+	CountOfBookingRequestByYear  int `json:"count_of_booking_request_by_year"`
+}

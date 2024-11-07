@@ -8,6 +8,7 @@ import (
 type StatisticController interface {
 	StatisticUser(c *gin.Context)
 	StatisticRoom(c *gin.Context)
+	Statistic(c *gin.Context)
 }
 
 type StatisticControllerImpl struct {
@@ -20,6 +21,10 @@ func (controller StatisticControllerImpl) StatisticUser(c *gin.Context) {
 
 func (controller StatisticControllerImpl) StatisticRoom(c *gin.Context) {
 	controller.statisticService.StatisticRoom(c)
+}
+
+func (controller StatisticControllerImpl) Statistic(c *gin.Context) {
+	controller.statisticService.Statistic(c)
 }
 
 func StatisticControllerInit(statisticService service.StatisticService) *StatisticControllerImpl {
