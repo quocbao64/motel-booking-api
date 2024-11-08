@@ -495,6 +495,9 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		IsLessorSigned: false,
 		Deposit:        room.Deposit,
 		IsEnable:       true,
+		MonthlyPrice:   room.Price,
+		BorrowedItems:  bookingRequest.BorrowedItems,
+		Title:          room.Title,
 	}
 
 	data, err := repo.contractRepo.Create(contract)
@@ -502,6 +505,30 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
 	}
+
+	var servicesHistory []dao.ServicesHistory
+	for _, service := range room.Services {
+		servicesHistory = append(servicesHistory, dao.ServicesHistory{
+			ServiceID:   service.ID,
+			IconURL:     service.IconURL,
+			Price:       service.Price,
+			IsEnable:    service.IsEnable,
+			ContractID:  data.ID,
+			ServiceName: service.Name,
+		})
+	}
+
+	dataHistory, err := repo.servicesHistoryRepo.CreateMultiple(servicesHistory)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	if len(dataHistory) > 0 {
+		data.ServicesHistory = dataHistory
+	}
+
+	_, err = repo.contractRepo.Update(data)
 
 	bookingRequest.Status = constant.BOOKING_REQUEST_ACCEPTED
 	bookingRes, err := repo.bookingRequestRepo.Update(bookingRequest)
