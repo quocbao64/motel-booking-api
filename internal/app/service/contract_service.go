@@ -7,6 +7,7 @@ import (
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
 	"encoding/base64"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -498,7 +499,10 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		MonthlyPrice:   room.Price,
 		BorrowedItems:  bookingRequest.BorrowedItems,
 		Title:          room.Title,
+		RentalDuration: bookingRequest.RentalDuration,
 	}
+
+	fmt.Println("Borrowed Items: ", bookingRequest.BorrowedItems)
 
 	data, err := repo.contractRepo.Create(contract)
 	if err != nil {
@@ -518,18 +522,19 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		})
 	}
 
-	dataHistory, err := repo.servicesHistoryRepo.CreateMultiple(servicesHistory)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
-		return
+	if len(servicesHistory) != 0 {
+		dataHistory, err := repo.servicesHistoryRepo.CreateMultiple(servicesHistory)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
+		}
+
+		if len(dataHistory) > 0 {
+			data.ServicesHistory = dataHistory
+		}
+
+		_, err = repo.contractRepo.Update(data)
 	}
-
-	if len(dataHistory) > 0 {
-		data.ServicesHistory = dataHistory
-	}
-
-	_, err = repo.contractRepo.Update(data)
-
 	bookingRequest.Status = constant.BOOKING_REQUEST_ACCEPTED
 	bookingRes, err := repo.bookingRequestRepo.Update(bookingRequest)
 	if err != nil {

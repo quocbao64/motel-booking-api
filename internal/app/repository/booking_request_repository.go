@@ -53,7 +53,7 @@ func (repo BookingRequestRepositoryImpl) GetAll(filter *BookingRequestFilter) ([
 
 func (repo BookingRequestRepositoryImpl) GetByID(id int) (*dao.BookingRequest, error) {
 	var bookingRequest *dao.BookingRequest
-	err := repo.db.First(&bookingRequest, id).Error
+	err := repo.db.Preload(clause.Associations).First(&bookingRequest, id).Error
 
 	if err != nil {
 		return &dao.BookingRequest{}, err
