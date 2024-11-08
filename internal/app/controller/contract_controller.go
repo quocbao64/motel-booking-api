@@ -12,6 +12,7 @@ type ContractController interface {
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
 	Liquidity(c *gin.Context)
+	CreateFromBookingRequest(c *gin.Context)
 }
 
 type ContractControllerImpl struct {
@@ -40,6 +41,10 @@ func (controller ContractControllerImpl) Delete(c *gin.Context) {
 
 func (controller ContractControllerImpl) Liquidity(c *gin.Context) {
 	controller.contractService.Liquidity(c)
+}
+
+func (controller ContractControllerImpl) CreateFromBookingRequest(c *gin.Context) {
+	controller.contractService.CreateFromBookingRequest(c)
 }
 
 func ContractControllerInit(contractService service.ContractService) *ContractControllerImpl {

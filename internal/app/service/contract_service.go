@@ -21,6 +21,7 @@ type ContractService interface {
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
 	Liquidity(c *gin.Context)
+	CreateFromBookingRequest(c *gin.Context)
 }
 
 type ContractServiceImpl struct {
@@ -33,6 +34,7 @@ type ContractServiceImpl struct {
 	servicesHistoryRepo repository.ServicesHistoryRepository
 	borrowedItemRepo    repository.BorrowedItemRepository
 	transactionRepo     repository.TransactionRepository
+	bookingRequestRepo  repository.BookingRequestRepository
 }
 
 type ContractParams struct {
@@ -60,6 +62,13 @@ type ContractParams struct {
 type LiquidityParams struct {
 	ContractID    int    `json:"contract_id"`
 	BorrowedItems []uint `json:"borrowed_items"`
+}
+
+type ContractFromBookingRequestParams struct {
+	BookingRequestID int    `json:"booking_request_id"`
+	PayFor           int    `json:"pay_for"`
+	FileBase64       string `json:"file_base64"`
+	FileName         string `json:"file_name"`
 }
 
 func (repo ContractServiceImpl) GetAll(c *gin.Context) {
@@ -422,6 +431,166 @@ func (repo ContractServiceImpl) Liquidity(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), resp))
 }
 
+func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
+	params := &ContractFromBookingRequestParams{}
+	err := c.BindJSON(&params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	bookingRequest, err := repo.bookingRequestRepo.GetByID(params.BookingRequestID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	room, err := repo.roomRepo.GetByID(int(bookingRequest.RoomID))
+
+	var payment float64
+	if params.PayFor == 1 {
+		payment = room.Deposit
+	} else {
+		payment = room.Deposit + room.Price
+	}
+
+	renter, err := repo.userRepo.GetByID(int(bookingRequest.RenterID))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+	lessor, err := repo.userRepo.GetByID(int(bookingRequest.LessorID))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	if lessor.Balance < payment {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, "Lessor balance is not enough", pkg.Null()))
+		return
+	}
+
+	if renter.Balance < payment {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, "Renter balance is not enough", pkg.Null()))
+		return
+	}
+
+	fileContent, err := base64.StdEncoding.DecodeString(params.FileBase64)
+	url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+params.FileName, fileContent, "application/pdf")
+	if err != nil {
+		return
+	}
+
+	contract := &dao.Contract{
+		RenterID:       bookingRequest.RenterID,
+		LessorID:       bookingRequest.LessorID,
+		RoomID:         bookingRequest.RoomID,
+		StartDate:      bookingRequest.StartDate,
+		DatePay:        time.Now(),
+		PayMode:        constant.PAYMODE_VNPAY,
+		Payment:        payment,
+		Status:         constant.CONTRACT_ACTIVE,
+		FilePath:       url,
+		IsRenterSigned: true,
+		IsLessorSigned: false,
+		Deposit:        room.Deposit,
+		IsEnable:       true,
+	}
+
+	data, err := repo.contractRepo.Create(contract)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	bookingRequest.Status = constant.BOOKING_REQUEST_ACCEPTED
+	bookingRes, err := repo.bookingRequestRepo.Update(bookingRequest)
+	if err != nil {
+		_ = repo.contractRepo.Delete(int(data.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	lessorTrans := &dao.Transaction{
+		UserID:          contract.LessorID,
+		TransactionType: constant.TRANSACTION_PAYMENT,
+		Amount:          room.Deposit,
+		Status:          constant.TRANSACTION_SUCCESS,
+		TransactionNo:   uuid.New().String(),
+	}
+
+	renterTrans := &dao.Transaction{
+		UserID:          contract.RenterID,
+		TransactionType: constant.TRANSACTION_PAYMENT,
+		Amount:          payment,
+		Status:          constant.TRANSACTION_SUCCESS,
+		TransactionNo:   uuid.New().String(),
+	}
+
+	lessorTransCreated, err := repo.transactionRepo.Create(lessorTrans)
+	if err != nil {
+		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		_, _ = repo.bookingRequestRepo.Update(bookingRes)
+		_ = repo.contractRepo.Delete(int(data.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	renterTransCreated, err := repo.transactionRepo.Create(renterTrans)
+	if err != nil {
+		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		_, _ = repo.bookingRequestRepo.Update(bookingRes)
+		_ = repo.contractRepo.Delete(int(data.ID))
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	invoice := &dao.Invoice{
+		ContractID:    &data.ID,
+		Amount:        payment,
+		PaymentStatus: constant.PAYMENT_COMPLETED,
+		TransactionID: renterTransCreated.ID,
+	}
+	_, err = repo.invoiceRepo.Create(invoice)
+	if err != nil {
+		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		_, _ = repo.bookingRequestRepo.Update(bookingRes)
+		_ = repo.contractRepo.Delete(int(data.ID))
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	err = repo.userRepo.UpdateBalance(lessor.ID, constant.TRANSACTION_PAYMENT, room.Deposit)
+	if err != nil {
+		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		_, _ = repo.bookingRequestRepo.Update(bookingRes)
+		_ = repo.contractRepo.Delete(int(data.ID))
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		_ = repo.invoiceRepo.Delete(int(invoice.ID))
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	err = repo.userRepo.UpdateBalance(renter.ID, constant.TRANSACTION_PAYMENT, payment)
+	if err != nil {
+		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		_, _ = repo.bookingRequestRepo.Update(bookingRes)
+		_ = repo.contractRepo.Delete(int(data.ID))
+		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
+		_ = repo.transactionRepo.Delete(int(renterTransCreated.ID))
+		_ = repo.invoiceRepo.Delete(int(invoice.ID))
+		_ = repo.userRepo.UpdateBalance(lessor.ID, constant.TRANSACTION_REFUND, room.Deposit)
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
 func ContractServiceInit(
 	repo repository.ContractRepository,
 	hashContractRepo repository.HashContractRepository,
@@ -431,7 +600,8 @@ func ContractServiceInit(
 	userRepo repository.UserRepository,
 	servicesHistoryRepo repository.ServicesHistoryRepository,
 	borrowedItemRepo repository.BorrowedItemRepository,
-	transactionRepo repository.TransactionRepository) *ContractServiceImpl {
+	transactionRepo repository.TransactionRepository,
+	bookingRequestRepo repository.BookingRequestRepository) *ContractServiceImpl {
 	return &ContractServiceImpl{
 		contractRepo:        repo,
 		hashContractRepo:    hashContractRepo,
@@ -442,5 +612,6 @@ func ContractServiceInit(
 		servicesHistoryRepo: servicesHistoryRepo,
 		borrowedItemRepo:    borrowedItemRepo,
 		transactionRepo:     transactionRepo,
+		bookingRequestRepo:  bookingRequestRepo,
 	}
 }
