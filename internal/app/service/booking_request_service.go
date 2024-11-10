@@ -94,7 +94,9 @@ func (repo BookingRequestServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
-	room, err := repo.roomRepo.GetByID(bookingRequest.RoomID)
+	borrowedItems, err := repo.borrowedItemRepo.GetAll(&repository.BorrowedItemFilter{
+		IDs: bookingRequest.BorrowedItems,
+	})
 
 	bookingRequestModel := &dao.BookingRequest{
 		RenterID:          uint(bookingRequest.RenterID),
@@ -109,7 +111,7 @@ func (repo BookingRequestServiceImpl) Create(c *gin.Context) {
 		RentalDuration:    bookingRequest.RentalDuration,
 		ResponseDate:      bookingRequest.ResponseDate,
 		ContractID:        uint(bookingRequest.ContractID),
-		BorrowedItems:     room.BorrowedItems,
+		BorrowedItems:     borrowedItems,
 	}
 
 	data, err := repo.bookingRequestRepo.Create(bookingRequestModel)
