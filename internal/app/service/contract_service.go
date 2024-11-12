@@ -126,6 +126,8 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 			BorrowedItems:   contract.BorrowedItems,
 			Deposit:         contract.Deposit,
 			DamagedItems:    contract.DamagedItems,
+			RentalDuration:  contract.RentalDuration,
+			CancelStatus:    contract.CancelStatus,
 		})
 	}
 
@@ -200,6 +202,8 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 		BorrowedItems:   data.BorrowedItems,
 		Deposit:         data.Deposit,
 		DamagedItems:    data.DamagedItems,
+		RentalDuration:  data.RentalDuration,
+		CancelStatus:    data.CancelStatus,
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))

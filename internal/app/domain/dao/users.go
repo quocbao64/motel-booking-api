@@ -31,4 +31,5 @@ type UsersResponse struct {
 	Password       string           `json:"-"`
 	Balance        float64          `json:"balance"`
 	Signature      *Signature       `json:"signature"`
+	//DeletedAt      *time.Time       `json:"deleted_at"`
 }

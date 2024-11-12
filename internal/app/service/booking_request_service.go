@@ -48,6 +48,7 @@ type BookingRequestCreateParams struct {
 	ResponseDate      time.Time `json:"response_date" form:"response_date"`
 	ContractID        int       `json:"contract_id" form:"contract_id"`
 	BorrowedItems     []int     `json:"borrowed_items" form:"borrowed_items"`
+	FilePath          string    `json:"file_path" form:"file_path"`
 }
 
 func (repo BookingRequestServiceImpl) GetAll(c *gin.Context) {
@@ -94,9 +95,11 @@ func (repo BookingRequestServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
-	borrowedItems, err := repo.borrowedItemRepo.GetAll(&repository.BorrowedItemFilter{
-		IDs: bookingRequest.BorrowedItems,
-	})
+	room, err := repo.roomRepo.GetByID(bookingRequest.RoomID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
 
 	bookingRequestModel := &dao.BookingRequest{
 		RenterID:          uint(bookingRequest.RenterID),
@@ -111,7 +114,8 @@ func (repo BookingRequestServiceImpl) Create(c *gin.Context) {
 		RentalDuration:    bookingRequest.RentalDuration,
 		ResponseDate:      bookingRequest.ResponseDate,
 		ContractID:        uint(bookingRequest.ContractID),
-		BorrowedItems:     borrowedItems,
+		BorrowedItems:     room.BorrowedItems,
+		FilePath:          bookingRequest.FilePath,
 	}
 
 	data, err := repo.bookingRequestRepo.Create(bookingRequestModel)
