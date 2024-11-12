@@ -14,7 +14,7 @@ type StatisticFilter struct {
 type StatisticRepository interface {
 	StatisticUser() ([]*dao.UserStatistic, error)
 	StatisticRoom() ([]*dao.RoomStatistic, error)
-	Statistic(filter *StatisticFilter) (*dao.Statistic, error)
+	Statistic(filter *StatisticFilter) ([]*dao.Statistic, error)
 }
 
 type StatisticRepositoryImpl struct {
@@ -60,104 +60,63 @@ func (repo StatisticRepositoryImpl) StatisticRoom() ([]*dao.RoomStatistic, error
 	return roomStatistic, nil
 }
 
-func (repo StatisticRepositoryImpl) Statistic(filter *StatisticFilter) (*dao.Statistic, error) {
-	var statistic dao.Statistic
+func (repo StatisticRepositoryImpl) Statistic(filter *StatisticFilter) ([]*dao.Statistic, error) {
+	var statistic []*dao.Statistic
 
 	year := filter.Year
-	month := filter.Month
 
 	query := `
 		SELECT
-			SUM(count_of_user_used_by_month) AS count_of_user_used_by_month,
-			SUM(count_of_user_used_by_year) AS count_of_user_used_by_year,
-			SUM(count_of_contract_by_month) AS count_of_contract_by_month,
-			SUM(count_of_contract_by_year) AS count_of_contract_by_year,
-			SUM(count_of_booking_request_by_month) AS count_of_booking_request_by_month,
-			SUM(count_of_booking_request_by_year) AS count_of_booking_request_by_year
+			month,
+			SUM(count_of_user_used) AS count_of_user_used,
+			SUM(count_of_contract) AS count_of_contract,
+			SUM(count_of_booking_request) AS count_of_booking_request
 		FROM (
 			SELECT
-				COUNT(DISTINCT lessor_id) AS count_of_user_used_by_month,
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_year,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_month,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_year,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_month,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_year
+				EXTRACT(MONTH FROM created_at) AS month,
+				COUNT(DISTINCT lessor_id) AS count_of_user_used,
+				0 AS count_of_contract,
+				0 AS count_of_booking_request
 			FROM
 				booking_requests
 			WHERE
-				TO_CHAR(created_at, 'YYYY-MM') = ?
+				EXTRACT(YEAR FROM created_at) = ?
+			GROUP BY month
 			UNION ALL
 			SELECT
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_month,
-				COUNT(DISTINCT lessor_id) AS count_of_user_used_by_year,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_month,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_year,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_month,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_year
-			FROM
-				booking_requests
-			WHERE
-				TO_CHAR(created_at, 'YYYY') = ?
-			UNION ALL
-			SELECT
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_month,
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_year,
-				COUNT(DISTINCT id) AS count_of_contract_by_month,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_year,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_month,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_year
+				EXTRACT(MONTH FROM created_at) AS month,
+				0 AS count_of_user_used,
+				COUNT(DISTINCT id) AS count_of_contract,
+				0 AS count_of_booking_request
 			FROM
 				contracts
 			WHERE
-				TO_CHAR(created_at, 'YYYY-MM') = ?
+				EXTRACT(YEAR FROM created_at) = ?
 				AND status NOT IN (4)
+			GROUP BY month
 			UNION ALL
 			SELECT
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_month,
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_year,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_month,
-				COUNT(DISTINCT id) AS count_of_contract_by_year,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_month,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_year
-			FROM
-				contracts
-			WHERE
-				TO_CHAR(created_at, 'YYYY') = ?
-				AND status NOT IN (4)
-			UNION ALL
-			SELECT
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_month,
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_year,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_month,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_year,
-				COUNT(DISTINCT id) AS count_of_booking_request_by_month,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_year
+				EXTRACT(MONTH FROM created_at) AS month,
+				0 AS count_of_user_used,
+				0 AS count_of_contract,
+				COUNT(DISTINCT id) AS count_of_booking_request
 			FROM
 				booking_requests
 			WHERE
-				TO_CHAR(created_at, 'YYYY-MM') = ?
-			UNION ALL
-			SELECT
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_month,
-				CAST(NULL AS BIGINT) AS count_of_user_used_by_year,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_month,
-				CAST(NULL AS BIGINT) AS count_of_contract_by_year,
-				CAST(NULL AS BIGINT) AS count_of_booking_request_by_month,
-				COUNT(DISTINCT id) AS count_of_booking_request_by_year
-			FROM
-				booking_requests
-			WHERE
-				TO_CHAR(created_at, 'YYYY') = ?
+				EXTRACT(YEAR FROM created_at) = ?
+			GROUP BY month
 		) AS combined_results
+		GROUP BY month
+		ORDER BY month
 	`
 
-	err := repo.db.Raw(query, fmt.Sprintf("%d-%02d", year, month), fmt.Sprintf("%d", year), fmt.Sprintf("%d-%02d", year, month), fmt.Sprintf("%d", year), fmt.Sprintf("%d-%02d", year, month), fmt.Sprintf("%d", year)).Scan(&statistic).Error
+	err := repo.db.Raw(query, fmt.Sprintf("%d", year), fmt.Sprintf("%d", year), fmt.Sprintf("%d", year)).Scan(&statistic).Error
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	return &statistic, nil
+	return statistic, nil
 }
 
 func StatisticRepositoryInit(db *gorm.DB) *StatisticRepositoryImpl {
