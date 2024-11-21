@@ -23,6 +23,7 @@ type ContractService interface {
 	Delete(c *gin.Context)
 	Liquidity(c *gin.Context)
 	CreateFromBookingRequest(c *gin.Context)
+	CancelContract(c *gin.Context)
 }
 
 type ContractServiceImpl struct {
@@ -70,6 +71,13 @@ type ContractFromBookingRequestParams struct {
 	PayFor           int    `json:"pay_for"`
 	FileBase64       string `json:"file_base64"`
 	FileName         string `json:"file_name"`
+}
+
+type CancelContractParams struct {
+	ContractID   int  `json:"contract_id"`
+	CancelStatus int  `json:"cancel_status"`
+	CanceledBy   uint `json:"canceled_by"`
+	Status       int  `json:"status"`
 }
 
 func (repo ContractServiceImpl) GetAll(c *gin.Context) {
@@ -539,7 +547,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 		_, err = repo.contractRepo.Update(data)
 	}
-	bookingRequest.Status = constant.BOOKING_REQUEST_ACCEPTED
+	bookingRequest.Status = constant.BOOKING_FINISHED
 	bookingRes, err := repo.bookingRequestRepo.Update(bookingRequest)
 	if err != nil {
 		_ = repo.contractRepo.Delete(int(data.ID))
@@ -565,7 +573,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 	lessorTransCreated, err := repo.transactionRepo.Create(lessorTrans)
 	if err != nil {
-		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		bookingRequest.Status = constant.BOOKING_WAITING_PAYMENT
 		_, _ = repo.bookingRequestRepo.Update(bookingRes)
 		_ = repo.contractRepo.Delete(int(data.ID))
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
@@ -574,7 +582,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 	renterTransCreated, err := repo.transactionRepo.Create(renterTrans)
 	if err != nil {
-		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		bookingRequest.Status = constant.BOOKING_WAITING_PAYMENT
 		_, _ = repo.bookingRequestRepo.Update(bookingRes)
 		_ = repo.contractRepo.Delete(int(data.ID))
 		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
@@ -590,7 +598,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 	}
 	_, err = repo.invoiceRepo.Create(invoice)
 	if err != nil {
-		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		bookingRequest.Status = constant.BOOKING_WAITING_PAYMENT
 		_, _ = repo.bookingRequestRepo.Update(bookingRes)
 		_ = repo.contractRepo.Delete(int(data.ID))
 		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
@@ -601,7 +609,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 	err = repo.userRepo.UpdateBalance(lessor.ID, constant.TRANSACTION_PAYMENT, room.Deposit)
 	if err != nil {
-		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		bookingRequest.Status = constant.BOOKING_WAITING_PAYMENT
 		_, _ = repo.bookingRequestRepo.Update(bookingRes)
 		_ = repo.contractRepo.Delete(int(data.ID))
 		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
@@ -613,7 +621,7 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 	err = repo.userRepo.UpdateBalance(renter.ID, constant.TRANSACTION_PAYMENT, payment)
 	if err != nil {
-		bookingRequest.Status = constant.BOOKING_REQUEST_PROCESSING
+		bookingRequest.Status = constant.BOOKING_WAITING_PAYMENT
 		_, _ = repo.bookingRequestRepo.Update(bookingRes)
 		_ = repo.contractRepo.Delete(int(data.ID))
 		_ = repo.transactionRepo.Delete(int(lessorTransCreated.ID))
@@ -625,6 +633,34 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
+}
+
+func (repo ContractServiceImpl) CancelContract(c *gin.Context) {
+	params := &CancelContractParams{}
+	err := c.BindJSON(&params)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	contract, err := repo.contractRepo.GetByID(params.ContractID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	if params.Status == 5 || params.Status == 6 {
+		err := repo.roomRepo.UpdateStatus(int(contract.RoomID), constant.ROOM_AVAILABLE)
+		if err != nil {
+			return
+		}
+	}
+
+	contract.CancelStatus = params.CancelStatus
+	contract.Status = params.Status
+	contract.CanceledBy = &params.CanceledBy
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
 }
 
 func ContractServiceInit(

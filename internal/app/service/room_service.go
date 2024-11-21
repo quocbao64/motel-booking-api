@@ -17,6 +17,7 @@ type RoomService interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	UpdateStatus(c *gin.Context)
 }
 
 type RoomServiceImpl struct {
@@ -30,6 +31,11 @@ type RoomParams struct {
 	Title   string `json:"title" form:"title"`
 	PageID  int    `json:"page_id" form:"page_id" binding:"required"`
 	PerPage int    `json:"per_page" form:"per_page" binding:"required"`
+}
+
+type RoomRequest struct {
+	ID     int `json:"id"`
+	Status int `json:"status"`
 }
 
 func (repo RoomServiceImpl) GetAll(c *gin.Context) {
@@ -123,6 +129,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		Deposit:       roomReq.Deposit,
 		Images:        images,
 		Address:       *address,
+		Status:        roomReq.Status,
 	}
 
 	data, err := repo.roomRepo.Create(room)
@@ -182,6 +189,23 @@ func (repo RoomServiceImpl) Update(c *gin.Context) {
 func (repo RoomServiceImpl) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	err := repo.roomRepo.Delete(id)
+
+	if err != nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), pkg.Null()))
+}
+
+func (repo RoomServiceImpl) UpdateStatus(c *gin.Context) {
+	var roomReq *RoomRequest
+	err := c.BindJSON(&roomReq)
+
+	if err != nil {
+		return
+	}
+
+	err = repo.roomRepo.UpdateStatus(roomReq.ID, roomReq.Status)
 
 	if err != nil {
 		return

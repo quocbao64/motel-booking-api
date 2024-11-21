@@ -13,5 +13,6 @@ func ContractRoute(init *config.Initialize, g *gin.RouterGroup) *gin.RouterGroup
 	g.DELETE("/:id", init.ContractCtrl.Delete)
 	g.POST("/liquidity", init.ContractCtrl.Liquidity)
 	g.POST("/booking", init.ContractCtrl.CreateFromBookingRequest)
+	g.POST("/cancel", init.ContractCtrl.CancelContract)
 	return g
 }

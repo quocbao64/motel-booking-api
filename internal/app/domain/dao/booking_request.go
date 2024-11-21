@@ -9,7 +9,7 @@ type BookingRequest struct {
 	RoomID            uint           `gorm:"room_id" json:"room_id"`
 	Room              Room           `gorm:"room" json:"room"`
 	RequestDate       time.Time      `gorm:"request_date" json:"request_date"`
-	Status            string         `gorm:"status" json:"status"`
+	Status            int            `gorm:"status" json:"status"`
 	Note              string         `gorm:"note" json:"note"`
 	MessageFromRenter string         `gorm:"message_from_renter" json:"message_from_renter"`
 	MessageFromLessor string         `gorm:"message_from_lessor" json:"message_from_lessor"`

@@ -39,7 +39,7 @@ type BookingRequestCreateParams struct {
 	PerPage           int       `json:"per_page" form:"per_page"`
 	RoomID            int       `json:"room_id" form:"room_id"`
 	RequestDate       time.Time `json:"request_date" form:"request_date"`
-	Status            string    `json:"status" form:"status"`
+	Status            int       `json:"status" form:"status"`
 	Note              string    `json:"note" form:"note"`
 	MessageFromRenter string    `json:"message_from_renter" form:"message_from_renter"`
 	MessageFromLessor string    `json:"message_from_lessor" form:"message_from_lessor"`

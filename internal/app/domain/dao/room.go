@@ -12,6 +12,7 @@ type Room struct {
 	MaxPeople       int              `gorm:"max_people" json:"max_people"`
 	RoomType        int              `gorm:"room_type" json:"room_type"`
 	Deposit         float64          `gorm:"deposit" json:"deposit"`
+	Status          int              `gorm:"status" json:"status"`
 	Services        []Service        `gorm:"many2many:room_services" json:"services"`
 	Images          []string         `gorm:"images;serializer:json" json:"images"`
 	BookingRequests []BookingRequest `gorm:"foreignKey:RoomID" json:"booking_requests"`
@@ -38,6 +39,7 @@ type RoomRequest struct {
 	WardID        uint           `json:"ward_id"`
 	AddressDetail string         `json:"address_detail"`
 	BorrowedItems []BorrowedItem `json:"borrowed_items"`
+	Status        int            `json:"status"`
 }
 
 type RoomResponse struct {
@@ -56,6 +58,7 @@ type RoomResponse struct {
 	Services      []Service       `json:"services"`
 	Images        []string        `json:"images"`
 	BorrowedItems []BorrowedItem  `json:"borrowed_items"`
+	Status        int             `json:"status"`
 }
 
 type RoomService struct {

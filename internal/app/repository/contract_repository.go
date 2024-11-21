@@ -19,6 +19,7 @@ type ContractRepository interface {
 	Update(service *dao.Contract) (*dao.Contract, error)
 	Delete(id int) error
 	UpdateLiquidity(contractID uint, lessorTrans *dao.Transaction, renterTrans *dao.Transaction) (*dao.Contract, error)
+	CancelContract(contractID uint, cancelStatus int, canceledBy uint) (*dao.Contract, error)
 }
 
 type ContractRepositoryImpl struct {
@@ -103,6 +104,33 @@ func (repo ContractRepositoryImpl) UpdateLiquidity(contractID uint, lessorTrans 
 
 		err = tx.Model(&dao.Contract{}).Where("id = ?", contractID).Updates(map[string]interface{}{
 			"status": constant.LIQUIDITY_COMPLETED,
+		}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return &dao.Contract{}, err
+	}
+
+	var contract *dao.Contract
+	err = repo.db.Preload(clause.Associations).First(&contract, contractID).Error
+
+	if err != nil {
+		return &dao.Contract{}, nil
+	}
+
+	return contract, nil
+}
+
+func (repo ContractRepositoryImpl) CancelContract(contractID uint, cancelStatus int, canceledBy uint) (*dao.Contract, error) {
+	err := repo.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&dao.Contract{}).Where("id = ?", contractID).Updates(map[string]interface{}{
+			"cancel_status": cancelStatus,
+			"canceled_by":   canceledBy,
 		}).Error
 		if err != nil {
 			return err

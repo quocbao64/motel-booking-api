@@ -11,6 +11,7 @@ type RoomController interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	UpdateStatus(c *gin.Context)
 }
 
 type RoomControllerImpl struct {
@@ -35,6 +36,10 @@ func (cus RoomControllerImpl) Update(c *gin.Context) {
 
 func (cus RoomControllerImpl) Delete(c *gin.Context) {
 	cus.roomSvc.Delete(c)
+}
+
+func (cus RoomControllerImpl) UpdateStatus(c *gin.Context) {
+	cus.roomSvc.UpdateStatus(c)
 }
 
 func RoomControllerInit(RoomService service.RoomService) *RoomControllerImpl {

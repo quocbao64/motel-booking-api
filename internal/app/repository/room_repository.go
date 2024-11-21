@@ -19,6 +19,7 @@ type RoomRepository interface {
 	Update(user *dao.Room) (*dao.Room, error)
 	Delete(id int) error
 	CreateRoomService(roomID uint, serviceID uint) error
+	UpdateStatus(id int, status int) error
 }
 
 type RoomRepositoryImpl struct {
@@ -107,6 +108,16 @@ func (repo RoomRepositoryImpl) CreateRoomService(roomID uint, serviceID uint) er
 	return nil
 }
 
+func (repo RoomRepositoryImpl) UpdateStatus(id int, status int) error {
+	err := repo.db.Model(&dao.Room{}).Where("id = ?", id).Update("status", status).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RoomRepositoryInit(db *gorm.DB) *RoomRepositoryImpl {
 	return &RoomRepositoryImpl{db: db}
 }
@@ -127,5 +138,6 @@ func roomToRoomResponse(room *dao.Room, addressID uint) *dao.RoomResponse {
 		Images:        room.Images,
 		AddressID:     addressID,
 		BorrowedItems: room.BorrowedItems,
+		Status:        room.Status,
 	}
 }
