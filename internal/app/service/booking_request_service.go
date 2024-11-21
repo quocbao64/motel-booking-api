@@ -94,7 +94,6 @@ func (repo BookingRequestServiceImpl) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
-
 	room, err := repo.roomRepo.GetByID(bookingRequest.RoomID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
@@ -172,6 +171,10 @@ func (repo BookingRequestServiceImpl) GetByRenterOrLessorID(c *gin.Context) {
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
-func BookingRequestServiceInit(bookingRequestRepo repository.BookingRequestRepository, borrowedItemRepo repository.BorrowedItemRepository) *BookingRequestServiceImpl {
-	return &BookingRequestServiceImpl{bookingRequestRepo: bookingRequestRepo, borrowedItemRepo: borrowedItemRepo}
+func BookingRequestServiceInit(bookingRequestRepo repository.BookingRequestRepository, roomRepo repository.RoomRepository, borrowedItemRepo repository.BorrowedItemRepository) *BookingRequestServiceImpl {
+	return &BookingRequestServiceImpl{
+		bookingRequestRepo: bookingRequestRepo,
+		roomRepo:           roomRepo,
+		borrowedItemRepo:   borrowedItemRepo,
+	}
 }

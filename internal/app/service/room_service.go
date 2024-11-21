@@ -128,7 +128,7 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		RoomType:      roomReq.RoomType,
 		Deposit:       roomReq.Deposit,
 		Images:        images,
-		Address:       *address,
+		Address:       address,
 		Status:        roomReq.Status,
 	}
 

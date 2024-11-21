@@ -3,7 +3,7 @@ package dao
 type Room struct {
 	BaseModel
 	Title           string           `gorm:"title" json:"title"`
-	Address         Address          `gorm:"polymorphic:Addressable;polymorphicValue:Room" json:"address"`
+	Address         *Address         `gorm:"polymorphic:Addressable;polymorphicValue:Room" json:"address"`
 	Acreage         int              `gorm:"acreage" json:"acreage"`
 	Price           float64          `gorm:"price" json:"price"`
 	Description     string           `gorm:"description" json:"description"`

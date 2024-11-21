@@ -2,6 +2,7 @@ package repository
 
 import (
 	"awesomeProject/internal/app/domain/dao"
+	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -60,6 +61,10 @@ func (repo RoomRepositoryImpl) GetByID(id int) (*dao.RoomResponse, error) {
 		return &dao.RoomResponse{}, err
 	}
 
+	fmt.Println("room.Address.ID", room.Address)
+	if room.Address == nil {
+		return roomToRoomResponse(room, 0), nil
+	}
 	return roomToRoomResponse(room, room.Address.ID), nil
 }
 

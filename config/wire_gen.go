@@ -49,7 +49,7 @@ func Init() *Initialize {
 	invoiceControllerImpl := controller.InvoiceControllerInit(invoiceServiceImpl)
 	servicesDemandServiceImpl := service.ServicesDemandServiceInit(servicesDemandRepositoryImpl)
 	servicesDemandControllerImpl := controller.ServicesDemandControllerInit(servicesDemandServiceImpl)
-	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl, borrowedItemRepositoryImpl)
+	bookingRequestServiceImpl := service.BookingRequestServiceInit(bookingRequestRepositoryImpl, roomRepositoryImpl, borrowedItemRepositoryImpl)
 	bookingRequestControllerImpl := controller.BookingRequestControllerInit(bookingRequestServiceImpl)
 	transactionServiceImpl := service.TransactionServiceInit(transactionRepositoryImpl)
 	transactionControllerImpl := controller.TransactionControllerInit(transactionServiceImpl)
