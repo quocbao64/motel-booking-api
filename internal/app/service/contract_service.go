@@ -6,7 +6,10 @@ import (
 	"awesomeProject/internal/app/domain/dao"
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -84,61 +87,76 @@ func (repo ContractServiceImpl) GetAll(c *gin.Context) {
 	renterID, _ := strconv.Atoi(c.Query("renter_id"))
 	lessorID, _ := strconv.Atoi(c.Query("lessor_id"))
 
+	// Initialize the filter to pass to the blockchain query
 	filter := &repository.ContractFilter{
 		RenterID: renterID,
 		LessorID: lessorID,
 	}
 
-	data, err := repo.contractRepo.GetAll(filter)
-
-	//contract := blockchain.InvokeChaincode()
-	//contracts, err := blockchain.GetAllContract(contract)
-	//
-	//fmt.Println(err)
+	// Get the contract data from the blockchain
+	contract := blockchain.InvokeChaincode()
+	contractBC, err := blockchain.ReadAllContracts(contract)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
 	}
 
+	// Create a slice to hold the filtered contracts
 	var contracts []dao.ContractResponse
-	for _, contract := range data {
-		renter, _ := repo.userRepo.GetByID(int(contract.RenterID))
-		lessor, _ := repo.userRepo.GetByID(int(contract.LessorID))
-		room, _ := repo.roomRepo.GetByID(int(contract.RoomID))
-		var canceledBy *dao.UsersResponse
-		if contract.CanceledBy != nil {
-			canceledBy, err = repo.userRepo.GetByID(int(*contract.CanceledBy))
+
+	// Filter contracts based on renterID and lessorID
+	for _, bcContract := range contractBC {
+		// Apply filter logic
+		if (filter.RenterID != 0 && bcContract.RenterID != uint(filter.RenterID)) ||
+			(filter.LessorID != 0 && bcContract.LessorID != uint(filter.LessorID)) {
+			// Skip contracts that don't match the filter criteria
+			continue
 		}
-		invoices, err := repo.invoiceRepo.GetByContractID(int(contract.ID))
+
+		// Use the blockchain data to populate the contract response
+		renter, _ := repo.userRepo.GetByID(int(bcContract.RenterID))
+		lessor, _ := repo.userRepo.GetByID(int(bcContract.LessorID))
+		room, _ := repo.roomRepo.GetByID(int(bcContract.RoomID))
+
+		var canceledBy *dao.UsersResponse
+		if bcContract.CanceledBy != nil {
+			canceledBy, err = repo.userRepo.GetByID(int(*bcContract.CanceledBy))
+		}
+
+		// Retrieve invoices from the database based on the contract ID
+		invoices, err := repo.invoiceRepo.GetByContractID(int(bcContract.ID))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 			return
 		}
+
+		// Append the contract response data from blockchain to the slice
 		contracts = append(contracts, dao.ContractResponse{
-			ID:              contract.ID,
+			ID:              bcContract.ID,
 			Renter:          *renter,
 			Lessor:          *lessor,
 			Room:            *room,
-			MonthlyPrice:    contract.MonthlyPrice,
+			MonthlyPrice:    bcContract.MonthlyPrice,
 			CanceledBy:      canceledBy,
-			StartDate:       contract.StartDate,
-			DatePay:         contract.DatePay,
-			PayMode:         contract.PayMode,
-			Payment:         contract.Payment,
-			Status:          contract.Status,
-			IsEnable:        contract.IsEnable,
-			FilePath:        contract.FilePath,
+			StartDate:       bcContract.StartDate,
+			DatePay:         bcContract.DatePay,
+			PayMode:         bcContract.PayMode,
+			Payment:         bcContract.Payment,
+			Status:          bcContract.Status,
+			IsEnable:        bcContract.IsEnable,
+			FilePath:        bcContract.FilePath,
 			Invoices:        invoices,
-			ServicesHistory: contract.ServicesHistory,
-			BorrowedItems:   contract.BorrowedItems,
-			Deposit:         contract.Deposit,
-			DamagedItems:    contract.DamagedItems,
-			RentalDuration:  contract.RentalDuration,
-			CancelStatus:    contract.CancelStatus,
+			ServicesHistory: bcContract.ServicesHistory,
+			BorrowedItems:   bcContract.BorrowedItems,
+			Deposit:         bcContract.Deposit,
+			DamagedItems:    bcContract.DamagedItems,
+			RentalDuration:  bcContract.RentalDuration,
+			CancelStatus:    bcContract.CancelStatus,
 		})
 	}
 
+	// Return the response with filtered contract data from blockchain
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contracts))
 }
 
@@ -152,7 +170,7 @@ func (repo ContractServiceImpl) GetByID(c *gin.Context) {
 
 	if data.IsLessorSigned && data.IsRenterSigned {
 		contractBC := blockchain.InvokeChaincode()
-		_, err = blockchain.ReadAsset(contractBC, int64(id))
+		_, err = blockchain.ReadContract(contractBC, int64(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 			return
@@ -226,21 +244,23 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		return
 	}
 
+	// Decode the base64 file and upload it to S3
 	fileContent, err := base64.StdEncoding.DecodeString(contractDAO.FileBase64)
 	url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+contractDAO.FileName, fileContent, "application/pdf")
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, pkg.BuildResponse(constant.InternalServerError, pkg.Null(), err))
 		return
 	}
 
-	filter := &repository.BorrowedItemFilter{
-		IDs: contractDAO.BorrowedItems,
-	}
+	// Get borrowed items
+	filter := &repository.BorrowedItemFilter{IDs: contractDAO.BorrowedItems}
 	borrowedItems, err := repo.borrowedItemRepo.GetAll(filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
+	// Create the contract object
 	contract := &dao.Contract{
 		RenterID:       uint(contractDAO.RenterID),
 		LessorID:       uint(contractDAO.LessorID),
@@ -260,14 +280,37 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		RentalDuration: contractDAO.RentalDuration,
 		Title:          contractDAO.Title,
 	}
-	data, err := repo.contractRepo.Create(contract)
 
+	// Save contract to the blockchain
+	data, err := repo.contractRepo.Create(contract)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
+	// Generate a hash for the contract data
+	hashData := fmt.Sprintf("%s-%s", contract.ID, contract.FilePath)
+	hash, _ := GenerateHash(hashData)
+
+	// Create a `HashContract` object
+	hashContract := &dao.HashContract{
+		ContractID: data.ID,
+		Hash:       hash,
+	}
+
+	// Save the HashContract to the blockchain
+	_, err = repo.hashContractRepo.Create(hashContract)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, pkg.BuildResponse(constant.InternalServerError, pkg.Null(), err))
+		return
+	}
+
+	// Create services history
 	room, err := repo.roomRepo.GetByID(contractDAO.RoomID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
 	var servicesHistory []dao.ServicesHistory
 	for _, service := range room.Services {
 		servicesHistory = append(servicesHistory, dao.ServicesHistory{
@@ -281,7 +324,6 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 	}
 
 	dataHistory, err := repo.servicesHistoryRepo.CreateMultiple(servicesHistory)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
@@ -291,58 +333,79 @@ func (repo ContractServiceImpl) Create(c *gin.Context) {
 		data.ServicesHistory = dataHistory
 	}
 
+	// Update contract with services history
 	_, err = repo.contractRepo.Update(data)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
+	// Return success response with contract data
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
 func (repo ContractServiceImpl) Update(c *gin.Context) {
 	var contract *dao.Contract
+	// Bind the incoming request data to the contract object
 	err := c.BindJSON(&contract)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
+	// Update the contract in the repository
 	data, err := repo.contractRepo.Update(contract)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 		return
 	}
 
+	// If both lessor and renter have signed, proceed with hashing and blockchain operations
 	if data.IsLessorSigned && data.IsRenterSigned {
+		// Retrieve the contract file from S3
 		file, err := pkg.GetFileFromS3(data.FilePath, "application/pdf")
-		hashFile, _ := pkg.HashFileBase64ToSHA256(base64.StdEncoding.EncodeToString(file))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, pkg.BuildResponse(constant.InternalServerError, pkg.Null(), err))
+			return
+		}
+
+		// Generate the hash from the file content
+		hashFile, err := pkg.HashFileBase64ToSHA256(base64.StdEncoding.EncodeToString(file))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, pkg.BuildResponse(constant.InternalServerError, pkg.Null(), err))
+			return
+		}
+
+		// Create a new hash contract record
 		hashContract := &dao.HashContract{
 			ContractID: data.ID,
 			Hash:       hashFile,
 		}
 		dataHash, err := repo.hashContractRepo.Create(hashContract)
-
-		contractBC := blockchain.InvokeChaincode()
-		err = blockchain.CreateAssets(contractBC, data)
-
 		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
+		}
+
+		// Interact with blockchain for contract asset creation
+		contractBC := blockchain.InvokeChaincode()
+		err = blockchain.CreateContract(contractBC, data)
+		if err != nil {
+			// If blockchain interaction fails, delete the contract and return an error
 			_ = repo.contractRepo.Delete(int(data.ID))
 			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 			return
 		}
 
+		// Create the hash contract on the blockchain
 		err = blockchain.CreateHashContract(contractBC, dataHash)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
 			return
 		}
 	}
 
+	// Respond with the updated contract data
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
@@ -661,6 +724,23 @@ func (repo ContractServiceImpl) CancelContract(c *gin.Context) {
 	contract.CanceledBy = &params.CanceledBy
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
+}
+
+func GenerateHash(fileBase64 string) (string, error) {
+	// Decode the base64 string to get the raw file content
+	fileContent, err := base64.StdEncoding.DecodeString(fileBase64)
+	if err != nil {
+		return "", errors.New("failed to decode base64 string")
+	}
+
+	// Generate the SHA-256 hash of the file content
+	hash := sha256.New()
+	hash.Write(fileContent)
+	hashBytes := hash.Sum(nil)
+
+	// Convert the hash bytes to a hexadecimal string
+	hashString := hex.EncodeToString(hashBytes)
+	return hashString, nil
 }
 
 func ContractServiceInit(

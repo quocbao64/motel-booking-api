@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"awesomeProject/internal/app/domain/dao"
-	"bytes"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -136,39 +135,33 @@ func readFirstFile(dirPath string) ([]byte, error) {
 	return os.ReadFile(path.Join(dirPath, fileNames[0]))
 }
 
-func GetAllContract(contract *client.Contract) ([]*dao.Contract, error) {
-	fmt.Println("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
-	var contracts []*dao.Contract
+func ReadAllContracts(contract *client.Contract) ([]*dao.Contract, error) {
+	fmt.Println("\n--> Evaluate Transaction: ReadAllContract, returns all contracts on the ledger")
 
 	evaluateResult, err := contract.EvaluateTransaction("ReadAllContract")
 	if err != nil {
-		panic(fmt.Errorf("Failed to evaluate transaction: %w", err))
-	}
-
-	if len(evaluateResult) == 0 {
-		return contracts, nil
+		return nil, fmt.Errorf("failed to evaluate ReadAllContract transaction: %w", err)
 	}
 
 	var result []map[string]interface{}
 	if err := json.Unmarshal(evaluateResult, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal ReadAllContract JSON: %w", err)
 	}
 
+	var contracts []*dao.Contract
 	for _, item := range result {
-
-		idresp, _ := strconv.Atoi(item["id"].(string))
 		roomID, _ := strconv.Atoi(item["room_id"].(string))
 		lessorID, _ := strconv.Atoi(item["lessor_id"].(string))
 		renterID, _ := strconv.Atoi(item["renter_id"].(string))
 		status, _ := strconv.Atoi(item["status"].(string))
-		payMode, _ := strconv.Atoi(item["pay_mode"].(string))
 		payment, _ := strconv.ParseFloat(item["payment"].(string), 64)
 		startDate, _ := time.Parse("2006-01-02", item["start_date"].(string))
 		datePay, _ := time.Parse("2006-01-02", item["date_pay"].(string))
+		payMode, _ := strconv.Atoi(item["pay_mode"].(string))
 
 		contract := &dao.Contract{
 			BaseModel: dao.BaseModel{
-				ID: uint(idresp),
+				ID: uint(item["id"].(float64)),
 			},
 			RoomID:    uint(roomID),
 			LessorID:  uint(lessorID),
@@ -179,18 +172,18 @@ func GetAllContract(contract *client.Contract) ([]*dao.Contract, error) {
 			DatePay:   datePay,
 			Payment:   payment,
 			IsEnable:  item["is_enable"].(bool),
+			Title:     item["title"].(string),
 		}
-
 		contracts = append(contracts, contract)
 	}
 
 	return contracts, nil
 }
 
-func CreateAssets(contract *client.Contract, contractDAO *dao.Contract) error {
-	fmt.Println("\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments")
+func CreateContract(contract *client.Contract, contractDAO *dao.Contract) error {
+	fmt.Println("\n--> Submit Transaction: CreateContract, creates a new rental contract")
 
-	_, err := contract.SubmitTransaction("Create",
+	_, err := contract.SubmitTransaction("CreateContract",
 		strconv.Itoa(int(contractDAO.RoomID)),
 		strconv.Itoa(int(contractDAO.LessorID)),
 		strconv.Itoa(int(contractDAO.RenterID)),
@@ -201,12 +194,13 @@ func CreateAssets(contract *client.Contract, contractDAO *dao.Contract) error {
 		contractDAO.DatePay.Format("2006-01-02"),
 		strconv.FormatFloat(contractDAO.Payment, 'f', -1, 64),
 		strconv.FormatBool(contractDAO.IsEnable),
+		contractDAO.Title,
+		strconv.Itoa(contractDAO.RentalDuration),
+		strconv.FormatFloat(contractDAO.Deposit, 'f', -1, 64),
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to submit transaction: %w", err))
-		return err
+		return fmt.Errorf("failed to submit CreateContract transaction: %w", err)
 	}
-
 	return nil
 }
 
@@ -226,51 +220,184 @@ func CreateHashContract(contract *client.Contract, contractDAO *dao.HashContract
 	return nil
 }
 
-func ReadAsset(contract *client.Contract, id int64) (string, error) {
-	fmt.Println("\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID")
+func ReadContract(contract *client.Contract, id int64) (*dao.Contract, error) {
+	fmt.Println("\n--> Evaluate Transaction: ReadContract, returns a contract by ID")
 
-	evaluateResult, err := contract.EvaluateTransaction("Read", strconv.Itoa(int(id)))
+	evaluateResult, err := contract.EvaluateTransaction("ReadContract", strconv.Itoa(int(id)))
 	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+		return nil, fmt.Errorf("failed to evaluate ReadContract transaction: %w", err)
 	}
-	result := formatJSON(evaluateResult)
-
-	return result, nil
-}
-
-func ReadHashContract(contract *client.Contract, id int64) (*dao.HashContract, error) {
-	fmt.Println("\n--> Evaluate Transaction: ReadHashContract, function returns an asset with a given assetID")
-
-	evaluateResult, err := contract.EvaluateTransaction("ReadHashContract", strconv.Itoa(int(id)))
-	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
-	}
-
-	fmt.Println(formatJSON(evaluateResult))
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(evaluateResult, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal ReadContract JSON: %w", err)
 	}
 
-	idresp, _ := strconv.Atoi(result["id"].(string))
-	contractID, _ := strconv.Atoi(result["contract_id"].(string))
+	roomID, _ := strconv.Atoi(result["room_id"].(string))
+	lessorID, _ := strconv.Atoi(result["lessor_id"].(string))
+	renterID, _ := strconv.Atoi(result["renter_id"].(string))
+	status, _ := strconv.Atoi(result["status"].(string))
+	payment, _ := strconv.ParseFloat(result["payment"].(string), 64)
+	startDate, _ := time.Parse("2006-01-02", result["start_date"].(string))
+	datePay, _ := time.Parse("2006-01-02", result["date_pay"].(string))
+	payMode, _ := strconv.Atoi(result["pay_mode"].(string))
+
+	contractResp := &dao.Contract{
+		BaseModel: dao.BaseModel{
+			ID: uint(id),
+		},
+		RoomID:    uint(roomID),
+		LessorID:  uint(lessorID),
+		RenterID:  uint(renterID),
+		Status:    status,
+		PayMode:   payMode,
+		StartDate: startDate,
+		DatePay:   datePay,
+		Payment:   payment,
+		IsEnable:  result["is_enable"].(bool),
+		Title:     result["title"].(string),
+	}
+
+	return contractResp, nil
+}
+
+func UpdateContractStatus(contract *client.Contract, contractID int, status int) error {
+	fmt.Println("\n--> Submit Transaction: UpdateContractStatus, updates the status of a contract")
+
+	_, err := contract.SubmitTransaction("UpdateContractStatus", strconv.Itoa(contractID), strconv.Itoa(status))
+	if err != nil {
+		return fmt.Errorf("failed to submit UpdateContractStatus transaction: %w", err)
+	}
+	return nil
+}
+
+func CreateTransaction(contract *client.Contract, transaction *dao.Transaction) error {
+	fmt.Println("\n--> Submit Transaction: CreateTransaction, creating a new transaction on the ledger")
+
+	_, err := contract.SubmitTransaction("CreateTransaction",
+		strconv.Itoa(int(transaction.UserID)),
+		strconv.Itoa(transaction.TransactionType),
+		strconv.Itoa(transaction.Status),
+		strconv.FormatFloat(transaction.Amount, 'f', -1, 64),
+		strconv.FormatFloat(transaction.BalanceBefore, 'f', -1, 64),
+		strconv.FormatFloat(transaction.BalanceAfter, 'f', -1, 64),
+		transaction.Description,
+		strconv.Itoa(transaction.PaymentMethod),
+		transaction.TransactionNo,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to submit transaction: %w", err)
+	}
+	return nil
+}
+
+func ReadTransaction(contract *client.Contract, transactionID string) (*dao.Transaction, error) {
+	fmt.Println("\n--> Evaluate Transaction: ReadTransaction, retrieving a transaction from the ledger")
+
+	evaluateResult, err := contract.EvaluateTransaction("ReadTransaction", transactionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate transaction: %w", err)
+	}
+
+	var transaction dao.Transaction
+	err = json.Unmarshal(evaluateResult, &transaction)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal transaction: %w", err)
+	}
+
+	return &transaction, nil
+}
+
+func UpdateTransaction(contract *client.Contract, transactionID string, status int, description string) error {
+	fmt.Println("\n--> Submit Transaction: UpdateTransaction, updating an existing transaction on the ledger")
+
+	_, err := contract.SubmitTransaction("UpdateTransaction",
+		transactionID,
+		strconv.Itoa(status),
+		description,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to submit transaction: %w", err)
+	}
+	return nil
+}
+
+func GetAllTransactions(contract *client.Contract) ([]*dao.Transaction, error) {
+	fmt.Println("\n--> Evaluate Transaction: GetAllTransactions, retrieving all transactions from the ledger")
+
+	evaluateResult, err := contract.EvaluateTransaction("GetAllTransactions")
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate transaction: %w", err)
+	}
+
+	if len(evaluateResult) == 0 {
+		return nil, nil
+	}
+
+	var transactions []*dao.Transaction
+	err = json.Unmarshal(evaluateResult, &transactions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal transactions: %w", err)
+	}
+
+	return transactions, nil
+}
+
+func ReadHashContract(contract *client.Contract, id int64) (*dao.HashContract, error) {
+	fmt.Println("\n--> Evaluate Transaction: ReadHashContract, returns a HashContract by ID")
+
+	// Evaluate the ReadHashContract transaction
+	evaluateResult, err := contract.EvaluateTransaction("ReadHashContract", strconv.Itoa(int(id)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate ReadHashContract transaction: %w", err)
+	}
+
+	// Parse the result into a map
+	var result map[string]interface{}
+	if err := json.Unmarshal(evaluateResult, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ReadHashContract JSON: %w", err)
+	}
+
+	// Parse the fields
 	hashContract := &dao.HashContract{
 		BaseModel: dao.BaseModel{
-			ID: uint(idresp),
+			ID: uint(id),
 		},
-		ContractID: uint(contractID),
+		ContractID: uint(result["contract_id"].(float64)),
 		Hash:       result["hash"].(string),
 	}
 
 	return hashContract, nil
 }
 
-func formatJSON(data []byte) string {
-	var prettyJSON bytes.Buffer
-	fmt.Println(string(data))
-	if err := json.Indent(&prettyJSON, data, "", "  "); err != nil {
-		panic(fmt.Errorf("failed to parse JSON: %w", err))
+// ReadAllHashContracts retrieves all HashContracts from the ledger.
+func ReadAllHashContracts(contract *client.Contract) ([]*dao.HashContract, error) {
+	fmt.Println("\n--> Evaluate Transaction: ReadAllHashContracts, returns all HashContracts on the ledger")
+
+	// Evaluate the ReadAllHashContracts transaction
+	evaluateResult, err := contract.EvaluateTransaction("ReadAllHashContracts")
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate ReadAllHashContracts transaction: %w", err)
 	}
-	return prettyJSON.String()
+
+	// Parse the result into a list of maps
+	var result []map[string]interface{}
+	if err := json.Unmarshal(evaluateResult, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ReadAllHashContracts JSON: %w", err)
+	}
+
+	var hashContracts []*dao.HashContract
+	// Loop through the result and construct HashContract objects
+	for _, item := range result {
+		hashContract := &dao.HashContract{
+			BaseModel: dao.BaseModel{
+				ID: uint(item["id"].(float64)),
+			},
+			ContractID: uint(item["contract_id"].(float64)),
+			Hash:       item["hash"].(string),
+		}
+		hashContracts = append(hashContracts, hashContract)
+	}
+
+	return hashContracts, nil
 }
