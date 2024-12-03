@@ -654,13 +654,64 @@ func (repo ContractServiceImpl) CancelContract(c *gin.Context) {
 		if err != nil {
 			return
 		}
+
+		if params.Status == 5 {
+			if params.CanceledBy == contract.RenterID {
+				trans := &dao.Transaction{
+					UserID:          contract.LessorID,
+					TransactionType: constant.TRANSACTION_REFUND,
+					Amount:          contract.Deposit * 2,
+					Status:          constant.TRANSACTION_SUCCESS,
+					TransactionNo:   uuid.New().String(),
+				}
+
+				_, err = repo.transactionRepo.Create(trans)
+			} else if params.CanceledBy == contract.LessorID {
+				trans := &dao.Transaction{
+					UserID:          contract.RenterID,
+					TransactionType: constant.TRANSACTION_REFUND,
+					Amount:          contract.Deposit * 2,
+					Status:          constant.TRANSACTION_SUCCESS,
+					TransactionNo:   uuid.New().String(),
+				}
+
+				_, err = repo.transactionRepo.Create(trans)
+			}
+		} else if params.Status == 6 {
+			lessorTrans := &dao.Transaction{
+				UserID:          contract.LessorID,
+				TransactionType: constant.TRANSACTION_REFUND,
+				Amount:          contract.Deposit,
+				Status:          constant.TRANSACTION_SUCCESS,
+				TransactionNo:   uuid.New().String(),
+			}
+
+			renterTrans := &dao.Transaction{
+				UserID:          contract.RenterID,
+				TransactionType: constant.TRANSACTION_REFUND,
+				Amount:          contract.Deposit,
+				Status:          constant.TRANSACTION_SUCCESS,
+				TransactionNo:   uuid.New().String(),
+			}
+
+			_, _ = repo.transactionRepo.Create(lessorTrans)
+
+			_, _ = repo.transactionRepo.Create(renterTrans)
+		}
 	}
 
 	contract.CancelStatus = params.CancelStatus
 	contract.Status = params.Status
 	contract.CanceledBy = &params.CanceledBy
 
-	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), contract))
+	data, err := repo.contractRepo.Update(contract)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
 
 func ContractServiceInit(
