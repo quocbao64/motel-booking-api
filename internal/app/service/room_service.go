@@ -5,10 +5,12 @@ import (
 	"awesomeProject/internal/app/domain/dao"
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type RoomService interface {
@@ -100,7 +102,13 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 	var images []string
 	if roomReq.Images != nil {
 		for _, image := range roomReq.Images {
-			url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+image.FileName, []byte(image.FileBase64), "image")
+			imageData, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(image.FileBase64, "data:image/png;base64,"))
+			if err != nil {
+				c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+				return
+			}
+
+			url, err := pkg.UploadS3("rooms/"+uuid.New().String()+"/"+image.FileName, imageData, "image")
 			if err != nil {
 				return
 			}
