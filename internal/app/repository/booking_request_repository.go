@@ -11,6 +11,7 @@ type BookingRequestFilter struct {
 	LessorID int
 	PageID   int
 	PerPage  int
+	RoomID   int
 }
 
 type BookingRequestRepository interface {
@@ -36,6 +37,10 @@ func (repo BookingRequestRepositoryImpl) GetAll(filter *BookingRequestFilter) ([
 
 	if filter.LessorID != 0 {
 		db = db.Where("lessor_id = ?", filter.LessorID)
+	}
+
+	if filter.RoomID != 0 {
+		db = db.Where("room_id = ?", filter.RoomID)
 	}
 
 	if filter.PageID != 0 && filter.PerPage != 0 {

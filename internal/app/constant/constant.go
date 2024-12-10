@@ -34,8 +34,8 @@ const (
 
 const (
 	ROOM_AVAILABLE = iota + 1
-	ROOM_HAD_CONTRACT
 	ROOM_UNAVAILABLE
+	ROOM_RENTED
 )
 
 const (

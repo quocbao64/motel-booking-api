@@ -11,6 +11,7 @@ type RoomFilter struct {
 	Title   string
 	PageID  int
 	PerPage int
+	OwnerID int
 }
 
 type RoomRepository interface {
@@ -34,6 +35,10 @@ func (repo RoomRepositoryImpl) GetAll(filter *RoomFilter) ([]*dao.RoomResponse, 
 
 	if filter.Title != "" {
 		db = db.Where("title LIKE ?", "%"+filter.Title+"%")
+	}
+
+	if filter.OwnerID != 0 {
+		db = db.Where("owner_id = ?", filter.OwnerID)
 	}
 
 	if filter.PageID != 0 && filter.PerPage != 0 {

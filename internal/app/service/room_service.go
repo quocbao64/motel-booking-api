@@ -6,6 +6,7 @@ import (
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
 	"encoding/base64"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -33,6 +34,7 @@ type RoomParams struct {
 	Title   string `json:"title" form:"title"`
 	PageID  int    `json:"page_id" form:"page_id" binding:"required"`
 	PerPage int    `json:"per_page" form:"per_page" binding:"required"`
+	OwnerID int    `json:"owner_id" form:"owner_id"`
 }
 
 type RoomRequest struct {
@@ -41,7 +43,6 @@ type RoomRequest struct {
 }
 
 func (repo RoomServiceImpl) GetAll(c *gin.Context) {
-
 	var params RoomParams
 	err := c.BindQuery(&params)
 	if err != nil {
@@ -53,6 +54,7 @@ func (repo RoomServiceImpl) GetAll(c *gin.Context) {
 		Title:   params.Title,
 		PageID:  params.PageID,
 		PerPage: params.PerPage,
+		OwnerID: params.OwnerID,
 	}
 	data, err := repo.roomRepo.GetAll(filter)
 
@@ -124,6 +126,8 @@ func (repo RoomServiceImpl) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
 	}
+
+	fmt.Println(images)
 
 	room := &dao.Room{
 		Title:         roomReq.Title,

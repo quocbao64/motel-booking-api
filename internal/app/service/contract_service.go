@@ -7,7 +7,6 @@ import (
 	"awesomeProject/internal/app/pkg"
 	"awesomeProject/internal/app/repository"
 	"encoding/base64"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -460,6 +459,12 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 
 	room, err := repo.roomRepo.GetByID(int(bookingRequest.RoomID))
 
+	err = repo.roomRepo.UpdateStatus(int(room.ID), constant.ROOM_RENTED)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
 	var payment float64
 	if params.PayFor == 1 {
 		payment = room.Deposit
@@ -513,8 +518,6 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		Title:          room.Title,
 		RentalDuration: bookingRequest.RentalDuration,
 	}
-
-	fmt.Println("Borrowed Items: ", bookingRequest.BorrowedItems)
 
 	data, err := repo.contractRepo.Create(contract)
 	if err != nil {
@@ -630,6 +633,24 @@ func (repo ContractServiceImpl) CreateFromBookingRequest(c *gin.Context) {
 		_ = repo.userRepo.UpdateBalance(lessor.ID, constant.TRANSACTION_REFUND, room.Deposit)
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
 		return
+	}
+
+	filter := &repository.BookingRequestFilter{
+		RoomID: int(contract.RoomID),
+	}
+	bookingRequests, err := repo.bookingRequestRepo.GetAll(filter)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, err, pkg.Null()))
+		return
+	}
+
+	for _, bookingRequest := range bookingRequests {
+		if bookingRequest.Status == constant.BOOKING_WAITING ||
+			bookingRequest.Status == constant.BOOKING_WAITING_PAYMENT {
+			bookingRequest.Status = constant.BOOKING_CANCELLED_BY_LESSOR
+		}
+
+		_, err = repo.bookingRequestRepo.Update(bookingRequest)
 	}
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
