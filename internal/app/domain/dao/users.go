@@ -16,6 +16,7 @@ type Users struct {
 	LessorContracts []Contract    `gorm:"foreignKey:LessorID" json:"lessor_contracts"`
 	Transactions    []Transaction `gorm:"foreignKey:UserID" json:"transactions"`
 	Signature       *Signature    `gorm:"foreignKey:UserID" json:"signature"`
+	Rooms           []Room        `gorm:"foreignKey:OwnerID" json:"rooms"`
 }
 
 type UsersResponse struct {

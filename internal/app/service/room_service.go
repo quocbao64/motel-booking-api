@@ -28,6 +28,7 @@ type RoomServiceImpl struct {
 	addressRepo      repository.AddressRepository
 	borrowedItemRepo repository.BorrowedItemRepository
 	serviceRepo      repository.ServiceRepository
+	userRepo         repository.UserRepository
 }
 
 type RoomParams struct {
@@ -35,6 +36,7 @@ type RoomParams struct {
 	PageID  int    `json:"page_id" form:"page_id" binding:"required"`
 	PerPage int    `json:"per_page" form:"per_page" binding:"required"`
 	OwnerID int    `json:"owner_id" form:"owner_id"`
+	Status  string `json:"status" form:"status"`
 }
 
 type RoomRequest struct {
@@ -50,11 +52,19 @@ func (repo RoomServiceImpl) GetAll(c *gin.Context) {
 		return
 	}
 
+	status := strings.Split(params.Status, ",")
+	var t2 []int
+	for _, i := range status {
+		j, _ := strconv.Atoi(i)
+		t2 = append(t2, j)
+	}
+
 	filter := &repository.RoomFilter{
 		Title:   params.Title,
 		PageID:  params.PageID,
 		PerPage: params.PerPage,
 		OwnerID: params.OwnerID,
+		Status:  t2,
 	}
 	data, err := repo.roomRepo.GetAll(filter)
 
@@ -89,6 +99,14 @@ func (repo RoomServiceImpl) GetByID(c *gin.Context) {
 		return
 	}
 	data.Address = *address
+
+	owner, err := repo.userRepo.GetByID(int(data.OwnerID))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	data.OwnerInfo = owner
 
 	c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), data))
 }
@@ -229,11 +247,13 @@ func (repo RoomServiceImpl) UpdateStatus(c *gin.Context) {
 func RoomServiceInit(roomRepo repository.RoomRepository,
 	addressRepo repository.AddressRepository,
 	borrowedItemRepo repository.BorrowedItemRepository,
-	serviceRepo repository.ServiceRepository) *RoomServiceImpl {
+	serviceRepo repository.ServiceRepository,
+	userRepo repository.UserRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
 		roomRepo:         roomRepo,
 		addressRepo:      addressRepo,
 		borrowedItemRepo: borrowedItemRepo,
 		serviceRepo:      serviceRepo,
+		userRepo:         userRepo,
 	}
 }

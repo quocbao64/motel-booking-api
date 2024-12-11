@@ -2,7 +2,6 @@ package repository
 
 import (
 	"awesomeProject/internal/app/domain/dao"
-	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -12,6 +11,7 @@ type RoomFilter struct {
 	PageID  int
 	PerPage int
 	OwnerID int
+	Status  []int
 }
 
 type RoomRepository interface {
@@ -41,6 +41,10 @@ func (repo RoomRepositoryImpl) GetAll(filter *RoomFilter) ([]*dao.RoomResponse, 
 		db = db.Where("owner_id = ?", filter.OwnerID)
 	}
 
+	if len(filter.Status) > 0 {
+		db = db.Where("status IN ?", filter.Status)
+	}
+
 	if filter.PageID != 0 && filter.PerPage != 0 {
 		db = db.Offset((filter.PageID - 1) * filter.PerPage).Limit(filter.PerPage)
 	}
@@ -66,7 +70,6 @@ func (repo RoomRepositoryImpl) GetByID(id int) (*dao.RoomResponse, error) {
 		return &dao.RoomResponse{}, err
 	}
 
-	fmt.Println("room.Address.ID", room.Address)
 	if room.Address == nil {
 		return roomToRoomResponse(room, 0), nil
 	}

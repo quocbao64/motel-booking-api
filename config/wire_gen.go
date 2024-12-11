@@ -26,7 +26,7 @@ func Init() *Initialize {
 	roomRepositoryImpl := repository.RoomRepositoryInit(gormDB)
 	borrowedItemRepositoryImpl := repository.BorrowedItemRepositoryInit(gormDB)
 	serviceRepositoryImpl := repository.ServiceRepositoryInit(gormDB)
-	roomServiceImpl := service.RoomServiceInit(roomRepositoryImpl, addressRepositoryImpl, borrowedItemRepositoryImpl, serviceRepositoryImpl)
+	roomServiceImpl := service.RoomServiceInit(roomRepositoryImpl, addressRepositoryImpl, borrowedItemRepositoryImpl, serviceRepositoryImpl, userRepositoryImpl)
 	roomControllerImpl := controller.RoomControllerInit(roomServiceImpl)
 	geographyRepositoryImpl := repository.GeographyRepositoryInit(gormDB)
 	geographyServiceImpl := service.GeographyServiceInit(geographyRepositoryImpl)

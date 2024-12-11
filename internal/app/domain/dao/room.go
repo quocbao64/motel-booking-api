@@ -17,6 +17,7 @@ type Room struct {
 	Images          []string         `gorm:"images;serializer:json" json:"images"`
 	BookingRequests []BookingRequest `gorm:"foreignKey:RoomID" json:"booking_requests"`
 	BorrowedItems   []BorrowedItem   `gorm:"foreignKey:RoomID" json:"borrowed_items"`
+	OwnerInfo       *Users           `gorm:"-" json:"owner_info"`
 }
 
 type Image struct {
@@ -59,6 +60,7 @@ type RoomResponse struct {
 	Images        []string        `json:"images"`
 	BorrowedItems []BorrowedItem  `json:"borrowed_items"`
 	Status        int             `json:"status"`
+	OwnerInfo     *UsersResponse  `json:"owner_info"`
 }
 
 type RoomService struct {
