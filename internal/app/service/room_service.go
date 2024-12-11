@@ -29,14 +29,18 @@ type RoomServiceImpl struct {
 	borrowedItemRepo repository.BorrowedItemRepository
 	serviceRepo      repository.ServiceRepository
 	userRepo         repository.UserRepository
+	geographyRepo    repository.GeographyRepository
 }
 
 type RoomParams struct {
-	Title   string `json:"title" form:"title"`
-	PageID  int    `json:"page_id" form:"page_id" binding:"required"`
-	PerPage int    `json:"per_page" form:"per_page" binding:"required"`
-	OwnerID int    `json:"owner_id" form:"owner_id"`
-	Status  string `json:"status" form:"status"`
+	Title      string `json:"title" form:"title"`
+	PageID     int    `json:"page_id" form:"page_id" binding:"required"`
+	PerPage    int    `json:"per_page" form:"per_page" binding:"required"`
+	OwnerID    int    `json:"owner_id" form:"owner_id"`
+	Status     string `json:"status" form:"status"`
+	ProvinceID int    `json:"province_id" form:"province_id"`
+	DistrictID int    `json:"district_id" form:"district_id"`
+	WardID     int    `json:"ward_id" form:"ward_id"`
 }
 
 type RoomRequest struct {
@@ -79,6 +83,52 @@ func (repo RoomServiceImpl) GetAll(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+		return
+	}
+
+	var resp []*dao.RoomResponse
+	if params.WardID > 0 {
+		ward, err := repo.geographyRepo.GetWardByID(params.WardID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
+		}
+		for _, room := range data {
+			if room.Address.WardID == ward.ID {
+				resp = append(resp, room)
+			}
+		}
+		c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), resp))
+		return
+	}
+
+	if params.DistrictID > 0 {
+		district, err := repo.geographyRepo.GetDistrictByID(params.DistrictID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
+		}
+		for _, room := range data {
+			if room.Address.DistrictID == district.ID {
+				resp = append(resp, room)
+			}
+		}
+		c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), resp))
+		return
+	}
+
+	if params.ProvinceID > 0 {
+		province, err := repo.geographyRepo.GetProvinceByID(params.ProvinceID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, pkg.BuildResponse(constant.BadRequest, pkg.Null(), err))
+			return
+		}
+		for _, room := range data {
+			if room.Address.ProvinceID == province.ID {
+				resp = append(resp, room)
+			}
+		}
+		c.JSON(http.StatusOK, pkg.BuildResponse(constant.Success, pkg.Null(), resp))
 		return
 	}
 
@@ -248,6 +298,7 @@ func RoomServiceInit(roomRepo repository.RoomRepository,
 	addressRepo repository.AddressRepository,
 	borrowedItemRepo repository.BorrowedItemRepository,
 	serviceRepo repository.ServiceRepository,
+	geographyRepo repository.GeographyRepository,
 	userRepo repository.UserRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
 		roomRepo:         roomRepo,
@@ -255,5 +306,6 @@ func RoomServiceInit(roomRepo repository.RoomRepository,
 		borrowedItemRepo: borrowedItemRepo,
 		serviceRepo:      serviceRepo,
 		userRepo:         userRepo,
+		geographyRepo:    geographyRepo,
 	}
 }

@@ -24,6 +24,9 @@ type AddressResponse struct {
 	WardName     string `json:"ward_name"`
 	DistrictName string `json:"district_name"`
 	ProvinceName string `json:"province_name"`
+	WardID       uint   `json:"ward_id"`
+	DistrictID   uint   `json:"district_id"`
+	ProvinceID   uint   `json:"province_id"`
 }
 
 func (a Address) Value() (driver.Value, error) {

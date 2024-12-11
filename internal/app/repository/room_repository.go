@@ -7,11 +7,14 @@ import (
 )
 
 type RoomFilter struct {
-	Title   string
-	PageID  int
-	PerPage int
-	OwnerID int
-	Status  []int
+	Title      string
+	PageID     int
+	PerPage    int
+	OwnerID    int
+	Status     []int
+	ProvinceID int
+	DistrictID int
+	WardID     int
 }
 
 type RoomRepository interface {
@@ -41,7 +44,7 @@ func (repo RoomRepositoryImpl) GetAll(filter *RoomFilter) ([]*dao.RoomResponse, 
 		db = db.Where("owner_id = ?", filter.OwnerID)
 	}
 
-	if len(filter.Status) > 0 {
+	if len(filter.Status) > 0 && filter.Status[0] != 0 {
 		db = db.Where("status IN ?", filter.Status)
 	}
 

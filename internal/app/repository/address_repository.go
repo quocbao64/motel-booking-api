@@ -23,7 +23,8 @@ func AddressRepositoryInit(db *gorm.DB) *AddressRepositoryImpl {
 func (repo AddressRepositoryImpl) GetFullAddress(id uint) (*dao.AddressResponse, error) {
 	var address dao.AddressResponse
 	err := repo.db.Table("address").
-		Select("address.id, address.detail, ward.ward_name, district.district_name, province.province_name").
+		Select("address.id, address.detail, ward.ward_name, district.district_name, province.province_name, "+
+			"ward.id as ward_id, district.id as district_id, province.id as province_id").
 		Joins("JOIN ward ON address.ward_id = ward.id").
 		Joins("JOIN district ON ward.district_id = district.id").
 		Joins("JOIN province ON district.province_id = province.id").
