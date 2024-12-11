@@ -19,4 +19,6 @@ type BookingRequest struct {
 	ContractID        uint           `gorm:"contract_id" json:"contract_id"`
 	BorrowedItems     []BorrowedItem `gorm:"foreignKey:BookingRequestID" json:"borrowed_items"`
 	FilePath          string         `gorm:"file_path" json:"file_path"`
+	Renter            Users          `gorm:"renter" json:"renter"`
+	Lessor            Users          `gorm:"lessor" json:"lessor"`
 }
